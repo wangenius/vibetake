@@ -1,6 +1,19 @@
 # vibe template
 
-这个项目是一个开发模版,(除了个人用途)：
+这个项目是一个开发模版:
+
+## 开始
+
+```bash
+git clone https://github.com/wangenius/vibecape-template.git
+```
+
+或者
+
+```bash
+npm i -g vibecape
+vibe template
+```
 
 使用的框架是：
 
