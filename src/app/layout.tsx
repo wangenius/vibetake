@@ -16,7 +16,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`antialiased`}>
+      <head>
+        <link rel="icon" href="/icon-black.svg" />
+      </head>
+      <body className={"min-h-screen"}>
         <Toaster theme="light" richColors position={"top-center"} />
         <RootProvider>{children}</RootProvider>
       </body>

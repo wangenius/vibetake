@@ -5,9 +5,10 @@
 
 集成的一些框架是：
 
-4. betterAuth ✅
+4. BetterAuth ✅
 5. fumadocs ✅
 6. drizzle ORM + libsql ✅
 7. Vercel AI-SDK ✅
 8. Stripe ✅
 9. zustand ✅
+10. tabler icon
