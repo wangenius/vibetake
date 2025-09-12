@@ -150,7 +150,7 @@ export default async function UsersPage({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((u) => (
+                  users.map((u: any) => (
                     <TableRow key={u.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">

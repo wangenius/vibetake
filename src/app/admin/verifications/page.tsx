@@ -220,7 +220,7 @@ export default async function VerificationsPage({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  verifications.map((v) => {
+                  verifications.map((v: any) => {
                     const expired = isVerificationExpired(v.expiresAt);
                     const expiringSoon = isVerificationExpiringSoon(v.expiresAt);
                     

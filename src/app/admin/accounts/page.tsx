@@ -156,7 +156,7 @@ export default async function AccountsPage({
           </CardContent>
         </Card>
         
-        {providerStats.slice(0, 3).map((stat) => (
+        {providerStats.slice(0, 3).map((stat: { providerId: string; count: number }) => (
           <Card key={stat.providerId}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{formatProviderName(stat.providerId)}</CardTitle>
@@ -192,7 +192,7 @@ export default async function AccountsPage({
               className="px-3 py-2 border border-input bg-background rounded-md text-sm"
             >
               <option value="all">所有提供商</option>
-              {providerStats.map((stat) => (
+              {providerStats.map((stat: { providerId: string; count: number }) => (
                 <option key={stat.providerId} value={stat.providerId}>
                   {formatProviderName(stat.providerId)} ({stat.count})
                 </option>
@@ -242,7 +242,7 @@ export default async function AccountsPage({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  accounts.map((acc) => {
+                  accounts.map((acc: any) => {
                     const accessTokenExpired = isTokenExpired(acc.accessTokenExpiresAt);
                     const refreshTokenExpired = isTokenExpired(acc.refreshTokenExpiresAt);
                     

@@ -47,3 +47,4 @@ package-lock.json
 data/*
 !data/readme.md
 drizzle
+supabase

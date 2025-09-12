@@ -220,7 +220,7 @@ export default async function SessionsPage({
                     </TableCell>
                   </TableRow>
                 ) : (
-                  sessions.map((s) => {
+                  sessions.map((s: any) => {
                     const expired = isSessionExpired(s.expiresAt);
                     return (
                       <TableRow key={s.id}>
