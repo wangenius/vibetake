@@ -2,6 +2,9 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/services/database/client";
 import * as schema from "@/services/database/schema";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
@@ -12,4 +15,5 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
+  secret: process.env.BETTER_AUTH_SECRET || "better-auth-secret",
 });
