@@ -82,39 +82,14 @@ export const put = (url: string, data?: any, config?: AxiosRequestConfig) => ins
 export const patch = (url: string, data?: any, config?: AxiosRequestConfig) => instance.patch(url, data, config);
 export const del = (url: string, config?: AxiosRequestConfig) => instance.delete(url, config);
 
-// 类型定义
-export interface ApiResponse<T = any> {
-  data: T;
-  message?: string;
-  success: boolean;
-  error?: string;
-  details?: string;
-}
-
 // 封装常用的API调用方法
 export const APIServer = {
-  get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
+  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await instance.get(url, config);
     return response.data;
   },
-
-  post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-    const response = await instance.post(url, data, config);
-    return response.data;
-  },
-
-  put: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-    const response = await instance.put(url, data, config);
-    return response.data;
-  },
-
-  patch: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-    const response = await instance.patch(url, data, config);
-    return response.data;
-  },
-
-  delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
-    const response = await instance.delete(url, config);
+  async post<T = any, DATA = any>(url: string, data?: DATA, config?: AxiosRequestConfig): Promise<T> {
+    const response = await instance.post<T>(url, data, config);
     return response.data;
   },
 };

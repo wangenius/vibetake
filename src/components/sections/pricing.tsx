@@ -11,10 +11,12 @@ import { useStripeProducts } from "@/hooks/use-stripe-products";
 import { APIServer } from "@/lib/axios";
 import { cn } from "@/lib/utils";
 import { useSession } from "@/services/userauth/auth-client";
+import Stripe from "stripe";
 
 export function PricingSection() {
   const [loading, setLoading] = useState<string | null>(null);
-  const [currentSubscription, setCurrentSubscription] = useState<SubscriptionStatus | null>(null);
+  const [currentSubscription, setCurrentSubscription] = useState<Stripe.SubscriptionItem | null>(null);
+
   const [fetchingSubscription, setFetchingSubscription] = useState(false);
   const { data: session, isPending: sessionLoading } = useSession();
   const { product, loading: productsLoading, error: productsError } = useStripeProducts();
@@ -25,8 +27,10 @@ export function PricingSection() {
     setFetchingSubscription(true);
     try {
       const data = await APIServer.get("/payment/status");
-      if (data.success) {
-        setCurrentSubscription(data.data.subscription);
+      console.log(data);
+
+      if (data) {
+        setCurrentSubscription(data);
       }
     } catch (error) {
       console.error("获取订阅状态失败:", error);
@@ -80,19 +84,22 @@ export function PricingSection() {
 
     setLoading(priceId);
     try {
-      const data = await APIServer.post("/payment/create", {
+      const data = await APIServer.post<{
+        sessionId: string;
+        url: string;
+      }>("/payment/create", {
         priceId: priceId,
         successUrl: "/payment/success",
         cancelUrl: "/payment/cancel",
       });
 
-      if (!data.success) {
-        throw new Error(data.error || "创建支付会话失败");
+      if (!data.sessionId) {
+        throw new Error("创建支付会话失败");
       }
 
-      if (data.data?.url) {
+      if (data.url) {
         // 跳转到 Stripe 支付页面
-        window.location.href = data.data.url;
+        window.location.href = data.url;
       } else {
         throw new Error("未获取到支付页面URL");
       }

@@ -42,8 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     const subscription = subscriptions.data[0].items.data[0];
-
-    return NextResponse.json({ subscription });
+    return NextResponse.json(subscription);
   } catch (error) {
     console.error("Get subscription status error:", error);
     return NextResponse.json({ error: "Failed to get subscription status" }, { status: 500 });

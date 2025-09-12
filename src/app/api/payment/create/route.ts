@@ -77,16 +77,14 @@ export async function POST(req: NextRequest) {
     const mode = price.type === "recurring" ? "subscription" : "payment";
 
     // 根据支付模式确定可用的支付方式
-    const paymentMethodTypes: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] =
-      mode === "subscription"
-        ? ["card"] // 订阅模式只支持信用卡
-        : ["card", "alipay", "wechat_pay"]; // 一次性支付支持多种方式
+    const payment_method_types: Stripe.Checkout.SessionCreateParams.PaymentMethodType[] =
+      mode === "subscription" ? ["card"] : ["card", "alipay", "wechat_pay"];
 
     // 创建支付会话
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customer.id,
       mode,
-      payment_method_types: paymentMethodTypes,
+      payment_method_types,
       line_items: [
         {
           price: priceId,
@@ -102,7 +100,7 @@ export async function POST(req: NextRequest) {
       // 支付方式选项配置
       payment_method_options: {
         wechat_pay: {
-          client: "web", // 微信支付需要设置为 web
+          client: "web",
         },
       },
       // 自动税费
@@ -116,12 +114,15 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    console.log(checkoutSession);
+    
+
     return Response.json({
       sessionId: checkoutSession.id,
       url: checkoutSession.url,
     });
   } catch (error) {
     console.error("Create checkout session error:", error);
-    return Response.json({ error: "Failed to create checkout session" }, { status: 500 });
+    return Response.json({ error }, { status: 500 });
   }
 }
