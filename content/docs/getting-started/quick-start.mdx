@@ -1,0 +1,307 @@
+---
+title: 快速开始
+description: 从零开始使用 Vibe Template 创建你的第一个项目
+---
+
+# 快速开始
+
+本指南将帮助你在 **5 分钟内** 启动并运行 Vibe Template，从创建项目到部署上线的完整流程。
+
+## ⚡ 一分钟快速体验
+
+如果你想立即体验 Vibe Template，可以使用我们的在线演示：
+
+- **[在线演示](https://vibe-template-demo.vercel.app)** - 查看完整功能
+- **[StackBlitz 在线编辑](https://stackblitz.com/github/wangenius/vibetake-template)** - 在线编辑代码
+
+## 📋 前置要求
+
+在开始之前，请确保你的系统已安装：
+
+- **Node.js 18+** ([下载地址](https://nodejs.org/))
+- **包管理器**: npm (内置) / yarn / pnpm
+- **Git** ([下载地址](https://git-scm.com/))
+- **代码编辑器**: VS Code (推荐)
+
+### 快速检查环境
+
+```bash
+# 检查版本
+node --version    # 应该 >= 18.0.0
+npm --version     # 应该 >= 9.0.0
+git --version     # 应该 >= 2.0.0
+```
+
+## 🚀 创建新项目
+
+选择最适合你的方式：
+
+### 方法一：使用 vibetake CLI（推荐）
+
+最简单的方式，一键创建项目：
+
+```bash
+# 安装 CLI 工具
+npm install -g vibetake
+
+# 创建项目（交互式）
+vibe template
+
+# 或直接指定项目名
+vibe template my-awesome-app
+
+# 进入项目目录
+cd my-awesome-app
+```
+
+**CLI 会自动完成：**
+- ✅ 项目文件复制
+- ✅ 依赖安装
+- ✅ 环境变量配置
+- ✅ 数据库初始化
+- ✅ Git 仓库初始化
+
+### 方法二：使用 create-next-app
+
+```bash
+npx create-next-app@latest my-app --example "https://github.com/wangenius/vibetake-template"
+cd my-app
+npm install
+```
+
+### 方法三：克隆仓库
+
+```bash
+# 克隆仓库
+git clone https://github.com/wangenius/vibetake-template.git my-project
+cd my-project
+
+# 安装依赖
+npm install
+
+# 重置 Git 历史
+rm -rf .git
+git init
+git add .
+git commit -m "Initial commit"
+```
+
+## ⚙️ 环境配置
+
+### 1. 创建环境变量文件
+
+```bash
+# 复制环境变量模板
+cp .env.example .env.local
+```
+
+### 2. 配置基础环境变量
+
+编辑 `.env.local` 文件：
+
+```bash
+# 基础配置
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+BETTER_AUTH_SECRET="your-32-character-secret-key-here"
+BETTER_AUTH_URL="http://localhost:3000"
+
+# 数据库配置（本地开发）
+DATABASE_URL="file:./dev.db"
+```
+
+### 3. 生成安全密钥
+
+```bash
+# 生成随机密钥
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+将生成的密钥复制到 `BETTER_AUTH_SECRET`。
+
+### 4. 初始化数据库
+
+```bash
+# 推送数据库模式
+npm run db:push
+
+# 验证数据库（可选）
+npm run db:studio
+```
+
+## 🎯 启动开发服务器
+
+```bash
+# 启动开发服务器
+npm run dev
+
+# 或使用其他包管理器
+yarn dev
+pnpm dev
+```
+
+**开发服务器启动后：**
+- 🌐 访问 [http://localhost:3000](http://localhost:3000) 查看应用
+- 📚 访问 [http://localhost:3000/docs](http://localhost:3000/docs) 查看文档
+- 🔐 访问 [http://localhost:3000/login](http://localhost:3000/login) 测试登录
+
+## ✅ 验证安装
+
+按照以下清单验证项目是否正确运行：
+
+### 基础功能检查
+- [ ] **首页加载** - 页面正常显示，无控制台错误
+- [ ] **样式正常** - Tailwind CSS 样式正确应用
+- [ ] **路由工作** - 可以正常导航到不同页面
+- [ ] **文档系统** - 文档页面可以访问和搜索
+
+### 数据库检查
+```bash
+# 检查数据库文件
+ls -la *.db
+
+# 打开数据库管理界面
+npm run db:studio
+```
+
+### 认证系统检查
+- [ ] **注册页面** - [/register](http://localhost:3000/register) 正常显示
+- [ ] **登录页面** - [/login](http://localhost:3000/login) 正常显示
+- [ ] **表单验证** - 输入验证正常工作
+
+## 🎨 自定义你的应用
+
+### 1. 修改应用信息
+
+编辑 `package.json`:
+```json
+{
+  "name": "my-awesome-app",
+  "description": "My awesome application built with Vibe Template",
+  "version": "1.0.0"
+}
+```
+
+### 2. 更新应用标题和描述
+
+编辑 `src/app/layout.tsx`:
+```tsx
+export const metadata: Metadata = {
+  title: "My Awesome App",
+  description: "Built with Vibe Template",
+}
+```
+
+### 3. 自定义主题颜色
+
+编辑 `src/styles/globals.css`:
+```css
+:root {
+  --primary: 220 90% 56%;
+  --primary-foreground: 0 0% 100%;
+  /* 更多颜色变量... */
+}
+```
+
+### 4. 添加你的 Logo
+
+替换 `public/` 目录中的图标文件：
+- `favicon.svg` - 网站图标
+- `icon.png` - 应用图标
+- `icon-black.svg` / `icon-white.svg` - 深色/浅色主题图标
+
+## 🔧 开发工具配置
+
+### VS Code 推荐扩展
+
+创建 `.vscode/extensions.json`:
+```json
+{
+  "recommendations": [
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "esbenp.prettier-vscode",
+    "ms-vscode.vscode-json"
+  ]
+}
+```
+
+### 代码格式化配置
+
+项目已预配置 Biome，运行：
+```bash
+# 检查代码
+npm run lint
+
+# 格式化代码
+npm run format
+```
+
+## 🚀 部署到生产环境
+
+### 1. 构建生产版本
+
+```bash
+# 构建应用
+npm run build
+
+# 本地测试生产版本
+npm start
+```
+
+### 2. 部署到 Vercel（推荐）
+
+```bash
+# 安装 Vercel CLI
+npm install -g vercel
+
+# 部署
+vercel
+
+# 或直接连接 GitHub 仓库到 Vercel
+```
+
+### 3. 配置生产环境变量
+
+在 Vercel 控制台中设置：
+- `BETTER_AUTH_SECRET` - 生产环境密钥
+- `BETTER_AUTH_URL` - 生产环境 URL
+- `DATABASE_URL` - 生产数据库连接
+
+## 📚 下一步学习
+
+现在你已经成功启动了 Vibe Template，建议按以下顺序深入学习：
+
+### 基础知识
+1. **[项目结构](/docs/getting-started/project-structure)** - 了解代码组织
+2. **[配置参考](/docs/reference/configuration)** - 详细配置选项
+
+### 核心功能
+3. **[认证系统](/docs/frameworks/authentication)** - 用户管理
+4. **[数据库操作](/docs/frameworks/database)** - 数据存储
+5. **[UI 组件](/docs/components/ui-components)** - 界面组件
+
+### 高级功能
+6. **[AI 集成](/docs/frameworks/ai-integration)** - 添加 AI 功能
+7. **[支付系统](/docs/frameworks/payment)** - 集成支付
+8. **[部署指南](/docs/guides/deployment)** - 生产部署
+
+## 🆘 需要帮助？
+
+如果遇到问题，可以：
+
+- 📖 查看 [故障排除指南](/docs/guides/troubleshooting)
+- 💬 在 [GitHub Discussions](https://github.com/wangenius/vibetake-template/discussions) 提问
+- 🐛 在 [GitHub Issues](https://github.com/wangenius/vibetake-template/issues) 报告 Bug
+- 📧 发送邮件到 support@vibetake.com
+
+## 🎉 恭喜！
+
+你已经成功创建了第一个 Vibe Template 项目！现在可以开始构建你的应用了。
+
+**接下来可以尝试：**
+- 创建你的第一个页面
+- 添加用户注册功能
+- 设计数据库模式
+- 集成第三方服务
+
+祝你开发愉快！ 🚀

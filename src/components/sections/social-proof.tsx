@@ -13,7 +13,7 @@ type Testimonial = {
 
 const testimonials = [
   {
-    body: "VibeCape saved me weeks of setup time. The authentication, database, and payment integrations work flawlessly out of the box. I launched my SaaS in record time!",
+    body: "vibetake saved me weeks of setup time. The authentication, database, and payment integrations work flawlessly out of the box. I launched my SaaS in record time!",
     author: {
       name: "Emily Chen",
       handle: "emilychen_dev",
@@ -21,7 +21,7 @@ const testimonials = [
     },
   },
   {
-    body: "The code quality in VibeCape is exceptional. Clean TypeScript, well-structured components, and excellent documentation. It's like having a senior developer on your team.",
+    body: "The code quality in vibetake is exceptional. Clean TypeScript, well-structured components, and excellent documentation. It's like having a senior developer on your team.",
     author: {
       name: "Marcus Johnson",
       handle: "marcusj_code",
@@ -29,7 +29,7 @@ const testimonials = [
     },
   },
   {
-    body: "As a startup founder, I needed to move fast without compromising quality. VibeCape gave me the perfect foundation with modern tech stack and best practices built-in.",
+    body: "As a startup founder, I needed to move fast without compromising quality. vibetake gave me the perfect foundation with modern tech stack and best practices built-in.",
     author: {
       name: "Sarah Thompson",
       handle: "sarahT_startup",
@@ -45,7 +45,7 @@ const testimonials = [
     },
   },
   {
-    body: "VibeCape's architecture is production-ready from day one. The performance optimizations and security considerations are top-notch. It's saved our team months of development.",
+    body: "vibetake's architecture is production-ready from day one. The performance optimizations and security considerations are top-notch. It's saved our team months of development.",
     author: {
       name: "Robert Yamamoto",
       handle: "robyam_arch",
@@ -53,7 +53,7 @@ const testimonials = [
     },
   },
   {
-    body: "The developer experience with VibeCape is outstanding. Hot reload, TypeScript support, and excellent tooling make development a joy. Best template I've ever used!",
+    body: "The developer experience with vibetake is outstanding. Hot reload, TypeScript support, and excellent tooling make development a joy. Best template I've ever used!",
     author: {
       name: "Olivia Foster",
       handle: "livfoster_dev",

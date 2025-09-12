@@ -1,0 +1,254 @@
+---
+title: 状态管理
+description: 使用 Zustand 进行应用状态管理
+---
+
+# 状态管理
+
+Vibetake 集成了 [Zustand](https://zustand-demo.pmnd.rs)，提供简单而强大的状态管理解决方案。
+
+## 特性
+
+- 🎯 简单直观的 API
+- 📦 轻量级（2kb gzipped）
+- 🔄 支持异步操作
+- 🛠️ TypeScript 友好
+- 🧪 易于测试
+
+## 基本使用
+
+### 创建 Store
+
+```typescript
+// src/stores/user-store.ts
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface UserState {
+  user: User | null;
+  isLoading: boolean;
+  setUser: (user: User) => void;
+  clearUser: () => void;
+  updateUser: (updates: Partial<User>) => void;
+}
+
+export const useUserStore = create<UserState>()(
+  persist(
+    (set, get) => ({
+      user: null,
+      isLoading: false,
+      
+      setUser: (user) => set({ user }),
+      
+      clearUser: () => set({ user: null }),
+      
+      updateUser: (updates) => {
+        const currentUser = get().user;
+        if (currentUser) {
+          set({ user: { ...currentUser, ...updates } });
+        }
+      },
+    }),
+    {
+      name: 'user-storage', // 本地存储键名
+      partialize: (state) => ({ user: state.user }), // 只持久化 user 字段
+    }
+  )
+);
+```
+
+### 在组件中使用
+
+```tsx
+'use client';
+
+import { useUserStore } from '@/stores/user-store';
+
+export default function UserProfile() {
+  const { user, setUser, clearUser, updateUser } = useUserStore();
+
+  const handleLogin = () => {
+    setUser({
+      id: '1',
+      name: '张三',
+      email: 'zhangsan@example.com'
+    });
+  };
+
+  const handleUpdateName = () => {
+    updateUser({ name: '李四' });
+  };
+
+  if (!user) {
+    return (
+      <button onClick={handleLogin} className="btn-primary">
+        登录
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2>用户信息</h2>
+      <p>姓名: {user.name}</p>
+      <p>邮箱: {user.email}</p>
+      
+      <div className="space-x-2">
+        <button onClick={handleUpdateName} className="btn-secondary">
+          更新姓名
+        </button>
+        <button onClick={clearUser} className="btn-danger">
+          登出
+        </button>
+      </div>
+    </div>
+  );
+}
+```
+
+## 高级用法
+
+### 异步操作
+
+```typescript
+// src/stores/todo-store.ts
+import { create } from 'zustand';
+
+interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+interface TodoState {
+  todos: Todo[];
+  isLoading: boolean;
+  error: string | null;
+  
+  fetchTodos: () => Promise<void>;
+  addTodo: (title: string) => Promise<void>;
+  toggleTodo: (id: string) => void;
+  deleteTodo: (id: string) => Promise<void>;
+}
+
+export const useTodoStore = create<TodoState>((set, get) => ({
+  todos: [],
+  isLoading: false,
+  error: null,
+
+  fetchTodos: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fetch('/api/todos');
+      const todos = await response.json();
+      set({ todos, isLoading: false });
+    } catch (error) {
+      set({ error: '获取待办事项失败', isLoading: false });
+    }
+  },
+
+  addTodo: async (title) => {
+    set({ isLoading: true });
+    try {
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      const newTodo = await response.json();
+      set(state => ({ 
+        todos: [...state.todos, newTodo], 
+        isLoading: false 
+      }));
+    } catch (error) {
+      set({ error: '添加待办事项失败', isLoading: false });
+    }
+  },
+
+  toggleTodo: (id) => {
+    set(state => ({
+      todos: state.todos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    }));
+  },
+
+  deleteTodo: async (id) => {
+    try {
+      await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+      set(state => ({
+        todos: state.todos.filter(todo => todo.id !== id)
+      }));
+    } catch (error) {
+      set({ error: '删除待办事项失败' });
+    }
+  },
+}));
+```
+
+### 选择器优化
+
+```tsx
+import { useUserStore } from '@/stores/user-store';
+import { shallow } from 'zustand/shallow';
+
+// 只订阅特定字段，避免不必要的重渲染
+export default function UserName() {
+  const userName = useUserStore(state => state.user?.name);
+  
+  return <span>{userName}</span>;
+}
+
+// 订阅多个字段
+export default function UserActions() {
+  const { setUser, clearUser } = useUserStore(
+    state => ({ setUser: state.setUser, clearUser: state.clearUser }),
+    shallow
+  );
+  
+  // ...
+}
+```
+
+### 中间件使用
+
+```typescript
+import { create } from 'zustand';
+import { devtools, subscribeWithSelector } from 'zustand/middleware';
+
+export const useAppStore = create<AppState>()(
+  devtools(
+    subscribeWithSelector(
+      persist(
+        (set, get) => ({
+          // store 实现
+        }),
+        { name: 'app-storage' }
+      )
+    ),
+    { name: 'app-store' }
+  )
+);
+
+// 订阅状态变化
+useAppStore.subscribe(
+  state => state.user,
+  (user) => {
+    console.log('用户状态变化:', user);
+  }
+);
+```
+
+## 最佳实践
+
+1. **模块化** - 将不同功能的状态分离到不同的 store
+2. **选择器优化** - 使用选择器避免不必要的重渲染
+3. **类型安全** - 充分利用 TypeScript 类型检查
+4. **持久化** - 合理使用 persist 中间件
+5. **测试** - 为 store 编写单元测试

@@ -1,7 +1,5 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Facebook, Twitter, Instagram, Github } from "lucide-react";
 
 export function Footer() {
   return (
@@ -14,7 +12,7 @@ export function Footer() {
             <ul className="mb-4">
               <li className="mt-2">
                 <a
-                  href="https://github.com/yourusername/vibe-template"
+                  href="https://github.com/wangenius/next-template"
                   className="hover:underline text-gray-600 hover:text-gray-800"
                 >
                   GitHub Repository
@@ -105,44 +103,17 @@ export function Footer() {
           <div className="w-full md:w-1/4 text-center md:text-left">
             <h5 className="uppercase mb-6 font-bold">Get Started</h5>
             <div className="flex flex-col">
-              <Button className="mb-2">
-                <a href="https://github.com/yourusername/vibe-template" className="text-white">
-                  Clone Template
-                </a>
-              </Button>
               <Button variant="outline">
-                <a href="/docs">
-                  Read Docs
-                </a>
+                <a href="/docs">Read Docs</a>
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Social Links */}
-        <div className="flex justify-center mt-8 space-x-6">
-          <a href="#" className="text-gray-400 hover:text-gray-500">
-            <span className="sr-only">Facebook</span>
-            <Facebook className="h-6 w-6" />
-          </a>
-          <a href="#" className="text-gray-400 hover:text-gray-500">
-            <span className="sr-only">Instagram</span>
-            <Instagram className="h-6 w-6" />
-          </a>
-          <a href="#" className="text-gray-400 hover:text-gray-500">
-            <span className="sr-only">Twitter</span>
-            <Twitter className="h-6 w-6" />
-          </a>
-          <a href="#" className="text-gray-400 hover:text-gray-500">
-            <span className="sr-only">GitHub</span>
-            <Github className="h-6 w-6" />
-          </a>
-        </div>
-
         {/* Copyright */}
         <div className="mt-8 text-center">
           <p className="text-base text-gray-400">
-            © 2024 VibeCape. Open source under MIT License.
+            © 2024 vibetake. Open source under MIT License.
           </p>
         </div>
       </div>

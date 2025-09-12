@@ -5,13 +5,13 @@
 ## 开始
 
 ```bash
-git clone https://github.com/wangenius/vibecape-template.git
+git clone https://github.com/wangenius/vibetake-template.git
 ```
 
 或者
 
 ```bash
-npm i -g vibecape
+npm i -g vibetake
 vibe template
 ```
 

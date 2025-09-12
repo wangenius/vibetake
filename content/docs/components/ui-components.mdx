@@ -1,0 +1,339 @@
+---
+title: UI 组件
+description: shadcn/ui 组件库使用指南
+---
+
+# UI 组件
+
+Vibetake 集成了 [shadcn/ui](https://ui.shadcn.com) 组件库，提供了一套高质量、可定制的 React 组件。
+
+## 特性
+
+- 🎨 **现代设计** - 基于 Radix UI 和 Tailwind CSS
+- 🔧 **高度可定制** - 完全控制样式和行为
+- ♿ **无障碍访问** - 遵循 WAI-ARIA 标准
+- 📱 **响应式** - 适配各种屏幕尺寸
+- 🎯 **TypeScript** - 完整的类型支持
+
+## 基础组件
+
+### Button 按钮
+
+```tsx
+import { Button } from "@/components/ui/button";
+
+export default function ButtonExample() {
+  return (
+    <div className="space-x-2">
+      <Button variant="default">默认按钮</Button>
+      <Button variant="secondary">次要按钮</Button>
+      <Button variant="destructive">危险按钮</Button>
+      <Button variant="outline">轮廓按钮</Button>
+      <Button variant="ghost">幽灵按钮</Button>
+      <Button variant="link">链接按钮</Button>
+    </div>
+  );
+}
+```
+
+### Input 输入框
+
+```tsx
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export default function InputExample() {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor="email">邮箱</Label>
+      <Input 
+        id="email" 
+        type="email" 
+        placeholder="请输入邮箱地址" 
+      />
+    </div>
+  );
+}
+```
+
+### Card 卡片
+
+```tsx
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+export default function CardExample() {
+  return (
+    <Card className="w-[350px]">
+      <CardHeader>
+        <CardTitle>创建项目</CardTitle>
+        <CardDescription>
+          部署你的新项目只需一键操作。
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form>
+          <div className="grid w-full items-center gap-4">
+            <div className="flex flex-col space-y-1.5">
+              <Label htmlFor="name">项目名称</Label>
+              <Input id="name" placeholder="我的项目" />
+            </div>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button variant="outline">取消</Button>
+        <Button>部署</Button>
+      </CardFooter>
+    </Card>
+  );
+}
+```
+
+## 表单组件
+
+### Form 表单
+
+```tsx
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+
+const formSchema = z.object({
+  username: z.string().min(2, {
+    message: "用户名至少需要 2 个字符。",
+  }),
+});
+
+export default function FormExample() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(values);
+  }
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>用户名</FormLabel>
+              <FormControl>
+                <Input placeholder="请输入用户名" {...field} />
+              </FormControl>
+              <FormDescription>
+                这是你的公开显示名称。
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <Button type="submit">提交</Button>
+      </form>
+    </Form>
+  );
+}
+```
+
+## 导航组件
+
+### Tabs 标签页
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+export default function TabsExample() {
+  return (
+    <Tabs defaultValue="account" className="w-[400px]">
+      <TabsList>
+        <TabsTrigger value="account">账户</TabsTrigger>
+        <TabsTrigger value="password">密码</TabsTrigger>
+      </TabsList>
+      <TabsContent value="account">
+        <p>在这里管理你的账户设置。</p>
+      </TabsContent>
+      <TabsContent value="password">
+        <p>在这里修改你的密码。</p>
+      </TabsContent>
+    </Tabs>
+  );
+}
+```
+
+## 反馈组件
+
+### Alert 警告
+
+```tsx
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+
+export default function AlertExample() {
+  return (
+    <Alert>
+      <AlertCircle className="h-4 w-4" />
+      <AlertTitle>注意！</AlertTitle>
+      <AlertDescription>
+        你可以在设置中添加组件到你的应用。
+      </AlertDescription>
+    </Alert>
+  );
+}
+```
+
+### Toast 提示
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+
+export default function ToastExample() {
+  const { toast } = useToast();
+
+  return (
+    <Button
+      onClick={() => {
+        toast({
+          title: "操作成功",
+          description: "你的设置已保存。",
+        });
+      }}
+    >
+      显示提示
+    </Button>
+  );
+}
+```
+
+## 数据展示
+
+### Table 表格
+
+```tsx
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+const invoices = [
+  {
+    invoice: "INV001",
+    paymentStatus: "已支付",
+    totalAmount: "$250.00",
+    paymentMethod: "信用卡",
+  },
+  // 更多数据...
+];
+
+export default function TableExample() {
+  return (
+    <Table>
+      <TableCaption>最近发票列表。</TableCaption>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-[100px]">发票</TableHead>
+          <TableHead>状态</TableHead>
+          <TableHead>方式</TableHead>
+          <TableHead className="text-right">金额</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {invoices.map((invoice) => (
+          <TableRow key={invoice.invoice}>
+            <TableCell className="font-medium">{invoice.invoice}</TableCell>
+            <TableCell>{invoice.paymentStatus}</TableCell>
+            <TableCell>{invoice.paymentMethod}</TableCell>
+            <TableCell className="text-right">{invoice.totalAmount}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+```
+
+## 自定义主题
+
+### 颜色配置
+
+```css
+/* globals.css */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    /* 更多颜色变量... */
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    /* 暗色主题变量... */
+  }
+}
+```
+
+### 组件定制
+
+```tsx
+// 自定义按钮变体
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface CustomButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "default" | "custom";
+}
+
+export function CustomButton({ className, variant = "default", ...props }: CustomButtonProps) {
+  return (
+    <Button
+      className={cn(
+        variant === "custom" && "bg-gradient-to-r from-purple-500 to-pink-500",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+```
+
+## 最佳实践
+
+1. **一致性** - 在整个应用中保持组件使用的一致性
+2. **可访问性** - 确保所有交互元素都有适当的 ARIA 标签
+3. **响应式** - 使用 Tailwind 的响应式类名适配不同屏幕
+4. **性能** - 按需导入组件，避免打包体积过大
+5. **定制** - 根据品牌需求适当定制组件样式

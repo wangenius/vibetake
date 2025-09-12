@@ -1,0 +1,325 @@
+---
+title: 认证 API
+description: BetterAuth 认证系统的 API 文档
+---
+
+# 认证 API
+
+本文档描述了 Vibe Template 中 BetterAuth 认证系统的 API 接口。
+
+## 基础端点
+
+所有认证相关的 API 都通过 `/api/auth` 路径访问。
+
+### 基础 URL
+
+```
+POST /api/auth/*
+```
+
+## 用户注册
+
+### 邮箱注册
+
+**端点**: `POST /api/auth/sign-up/email`
+
+**请求体**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "用户名"
+}
+```
+
+**响应**:
+```json
+{
+  "user": {
+    "id": "user_123",
+    "email": "user@example.com",
+    "name": "用户名",
+    "emailVerified": false,
+    "image": null,
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  "session": {
+    "id": "session_123",
+    "userId": "user_123",
+    "expiresAt": "2024-02-01T00:00:00.000Z"
+  }
+}
+```
+
+**错误响应**:
+```json
+{
+  "error": "EMAIL_ALREADY_EXISTS",
+  "message": "邮箱已被注册"
+}
+```
+
+## 用户登录
+
+### 邮箱登录
+
+**端点**: `POST /api/auth/sign-in/email`
+
+**请求体**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**响应**:
+```json
+{
+  "user": {
+    "id": "user_123",
+    "email": "user@example.com",
+    "name": "用户名",
+    "emailVerified": true,
+    "image": null
+  },
+  "session": {
+    "id": "session_123",
+    "userId": "user_123",
+    "expiresAt": "2024-02-01T00:00:00.000Z"
+  }
+}
+```
+
+### OAuth 登录
+
+**端点**: `GET /api/auth/sign-in/[provider]`
+
+支持的提供商：
+- `google`
+- `github`
+- `discord`
+
+**使用方式**:
+```javascript
+// 重定向到 OAuth 提供商
+window.location.href = '/api/auth/sign-in/google';
+```
+
+## 会话管理
+
+### 获取当前会话
+
+**端点**: `GET /api/auth/session`
+
+**响应**:
+```json
+{
+  "user": {
+    "id": "user_123",
+    "email": "user@example.com",
+    "name": "用户名",
+    "emailVerified": true,
+    "image": "https://example.com/avatar.jpg"
+  },
+  "session": {
+    "id": "session_123",
+    "userId": "user_123",
+    "expiresAt": "2024-02-01T00:00:00.000Z"
+  }
+}
+```
+
+### 登出
+
+**端点**: `POST /api/auth/sign-out`
+
+**响应**:
+```json
+{
+  "success": true
+}
+```
+
+## 密码管理
+
+### 忘记密码
+
+**端点**: `POST /api/auth/forget-password`
+
+**请求体**:
+```json
+{
+  "email": "user@example.com",
+  "redirectTo": "https://yourapp.com/reset-password"
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "message": "重置链接已发送到您的邮箱"
+}
+```
+
+### 重置密码
+
+**端点**: `POST /api/auth/reset-password`
+
+**请求体**:
+```json
+{
+  "token": "reset_token_123",
+  "password": "newpassword123"
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "message": "密码重置成功"
+}
+```
+
+## 邮箱验证
+
+### 发送验证邮件
+
+**端点**: `POST /api/auth/send-verification-email`
+
+**请求体**:
+```json
+{
+  "email": "user@example.com",
+  "redirectTo": "https://yourapp.com/verify-email"
+}
+```
+
+### 验证邮箱
+
+**端点**: `GET /api/auth/verify-email`
+
+**查询参数**:
+- `token`: 验证令牌
+- `callbackURL`: 验证后重定向的 URL
+
+## 用户信息管理
+
+### 更新用户信息
+
+**端点**: `POST /api/auth/update-user`
+
+**请求体**:
+```json
+{
+  "name": "新用户名",
+  "image": "https://example.com/new-avatar.jpg"
+}
+```
+
+**响应**:
+```json
+{
+  "user": {
+    "id": "user_123",
+    "email": "user@example.com",
+    "name": "新用户名",
+    "image": "https://example.com/new-avatar.jpg",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+### 更改密码
+
+**端点**: `POST /api/auth/change-password`
+
+**请求体**:
+```json
+{
+  "currentPassword": "oldpassword123",
+  "newPassword": "newpassword123"
+}
+```
+
+**响应**:
+```json
+{
+  "success": true,
+  "message": "密码更改成功"
+}
+```
+
+## 错误代码
+
+| 错误代码 | 描述 |
+|---------|------|
+| `INVALID_EMAIL` | 邮箱格式无效 |
+| `INVALID_PASSWORD` | 密码不符合要求 |
+| `EMAIL_ALREADY_EXISTS` | 邮箱已被注册 |
+| `USER_NOT_FOUND` | 用户不存在 |
+| `INVALID_CREDENTIALS` | 登录凭据无效 |
+| `EMAIL_NOT_VERIFIED` | 邮箱未验证 |
+| `TOKEN_EXPIRED` | 令牌已过期 |
+| `TOKEN_INVALID` | 令牌无效 |
+| `SESSION_EXPIRED` | 会话已过期 |
+| `UNAUTHORIZED` | 未授权访问 |
+
+## 客户端 SDK
+
+### React Hooks
+
+```tsx
+import { useSession, useSignIn, useSignUp } from "@/hooks/auth";
+
+function AuthComponent() {
+  const { data: session, isLoading } = useSession();
+  const signIn = useSignIn();
+  const signUp = useSignUp();
+
+  const handleSignIn = async () => {
+    try {
+      await signIn.mutateAsync({
+        email: "user@example.com",
+        password: "password123"
+      });
+    } catch (error) {
+      console.error("登录失败:", error);
+    }
+  };
+
+  // ...
+}
+```
+
+### 中间件保护
+
+```typescript
+// middleware.ts
+import { auth } from "@/services/userauth/auth";
+import { NextRequest } from "next/server";
+
+export async function middleware(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: request.headers
+  });
+
+  if (!session && request.nextUrl.pathname.startsWith('/dashboard')) {
+    return Response.redirect(new URL('/login', request.url));
+  }
+}
+
+export const config = {
+  matcher: ['/dashboard/:path*', '/profile/:path*']
+};
+```
+
+## 安全最佳实践
+
+1. **HTTPS** - 生产环境必须使用 HTTPS
+2. **CSRF 保护** - BetterAuth 内置 CSRF 保护
+3. **会话安全** - 会话令牌自动轮换
+4. **密码策略** - 实施强密码要求
+5. **速率限制** - 对认证端点实施速率限制

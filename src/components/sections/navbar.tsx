@@ -8,11 +8,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Menu, Moon, Sun } from "lucide-react";
+import { LogOut } from "lucide-react";
+import { IconBrandX, IconBrandGithub } from "@tabler/icons-react";
 
 import { signOut, useSession } from "@/services/userauth/auth-client";
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export function Navbar() {
@@ -34,16 +35,28 @@ export function Navbar() {
           <div className="flex h-16 items-center justify-between">
             <div className="flex items-center space-x-3">
               <Link href="/">
-                <img src="/icon-black.svg" alt="vibecape" className="h-8 w-8" />
+                <img src="/icon-black.svg" alt="vibetake" className="h-8 w-8" />
               </Link>
               <span className="text-xl font-semibold tracking-tight">
-                vibecape
+                vibetake
               </span>
             </div>
             <div className="flex items-center space-x-6">
               <Link href="/docs">
                 <Button variant="ghost" className="text-sm font-medium">
                   Docs
+                </Button>
+              </Link>
+              <Link href="https://x.com/iamwangenius" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <IconBrandX className="h-4 w-4" />
+                  <span className="sr-only">Twitter</span>
+                </Button>
+              </Link>
+              <Link href="https://github.com/wangenius/next-template" target="_blank" rel="noopener noreferrer">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <IconBrandGithub className="h-4 w-4" />
+                  <span className="sr-only">GitHub</span>
                 </Button>
               </Link>
               {isPending ? (

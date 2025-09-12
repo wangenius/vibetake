@@ -1,0 +1,860 @@
+---
+title: database
+---
+
+# 数据库操作指南
+
+Vibetake 使用 Drizzle ORM 与 PostgreSQL 数据库进行交互，提供类型安全的数据库操作。本文档将详细介绍如何配置和使用数据库系统。
+
+## 概述
+
+数据库技术栈包括：
+
+- 🗄️ **PostgreSQL** - 主数据库
+- 🔧 **Drizzle ORM** - TypeScript ORM
+- 🚀 **Drizzle Kit** - 数据库迁移工具
+- 🔗 **postgres.js** - PostgreSQL 客户端
+- ☁️ **Supabase** - 推荐的云数据库服务
+
+## 系统架构
+
+```mermaid
+graph TB
+    A[应用程序] --> B[Drizzle ORM]
+    B --> C[postgres.js 客户端]
+    C --> D[PostgreSQL 数据库]
+    
+    E[Drizzle Kit] --> F[迁移文件]
+    F --> D
+    
+    subgraph "数据库层"
+        G[Schema 定义] --> H[类型生成]
+        H --> I[查询构建器]
+        I --> J[SQL 执行]
+    end
+```
+
+## 快速开始
+
+### 1. 环境配置
+
+在 `.env` 文件中配置数据库连接：
+
+```bash
+# PostgreSQL 数据库连接
+DATABASE_URL=postgresql://postgres:password@localhost:5432/your_database
+
+# 或者使用 Supabase
+DATABASE_URL=postgresql://postgres:[password]@[host]:5432/postgres
+```
+
+### 2. 基本使用
+
+```typescript
+import { db } from "@/services/database/client";
+import { user } from "@/services/database/schema";
+import { eq } from "drizzle-orm";
+
+// 查询用户
+const users = await db.select().from(user);
+
+// 根据 ID 查询用户
+const userById = await db
+  .select()
+  .from(user)
+  .where(eq(user.id, "user-id"));
+
+// 创建用户
+const newUser = await db
+  .insert(user)
+  .values({
+    id: "new-user-id",
+    name: "张三",
+    email: "zhangsan@example.com",
+  })
+  .returning();
+```
+
+## 数据库配置
+
+### 1. 客户端配置
+
+数据库客户端配置位于 `src/services/database/client.ts`：
+
+```typescript
+import dotenv from "dotenv";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema";
+
+dotenv.config();
+
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:password@localhost:5432/postgres";
+
+const client = postgres(databaseUrl);
+const db = drizzle(client, { schema });
+
+export { db };
+```
+
+### 2. Drizzle Kit 配置
+
+Drizzle Kit 配置位于 `drizzle.config.ts`：
+
+```typescript
+import { defineConfig } from "drizzle-kit";
+import { config } from "dotenv";
+
+config();
+
+export default defineConfig({
+  schema: "./src/services/database/schema.ts",
+  out: "./drizzle/postgres",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+});
+```
+
+## 数据库模式
+
+### 1. 用户表 (user)
+
+```typescript
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name"),
+  email: text("email").notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+```
+
+**字段说明：**
+- `id`: 用户唯一标识符
+- `name`: 用户姓名
+- `email`: 用户邮箱（必填，唯一）
+- `emailVerified`: 邮箱验证状态
+- `image`: 用户头像 URL
+- `createdAt`: 创建时间
+- `updatedAt`: 更新时间
+
+### 2. 账户表 (account)
+
+```typescript
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => user.id),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  idToken: text("id_token"),
+  password: text("password"), // 用于邮箱密码认证
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+```
+
+### 3. 会话表 (session)
+
+```typescript
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => user.id),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+```
+
+### 4. 验证表 (verification)
+
+```typescript
+export const verification = pgTable("verification", {
+  id: text("id").primaryKey(),
+  identifier: text("identifier").notNull(),
+  value: text("value").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+```
+
+## 基本 CRUD 操作
+
+### 1. 创建 (Create)
+
+```typescript
+import { db } from "@/services/database/client";
+import { user } from "@/services/database/schema";
+
+// 插入单个用户
+const newUser = await db
+  .insert(user)
+  .values({
+    id: crypto.randomUUID(),
+    name: "张三",
+    email: "zhangsan@example.com",
+    emailVerified: false,
+  })
+  .returning();
+
+// 插入多个用户
+const newUsers = await db
+  .insert(user)
+  .values([
+    {
+      id: crypto.randomUUID(),
+      name: "李四",
+      email: "lisi@example.com",
+    },
+    {
+      id: crypto.randomUUID(),
+      name: "王五",
+      email: "wangwu@example.com",
+    },
+  ])
+  .returning();
+
+console.log("创建的用户:", newUsers);
+```
+
+### 2. 查询 (Read)
+
+```typescript
+import { db } from "@/services/database/client";
+import { user } from "@/services/database/schema";
+import { eq, like, and, or, desc, asc } from "drizzle-orm";
+
+// 查询所有用户
+const allUsers = await db.select().from(user);
+
+// 根据 ID 查询
+const userById = await db
+  .select()
+  .from(user)
+  .where(eq(user.id, "user-id"))
+  .limit(1);
+
+// 根据邮箱查询
+const userByEmail = await db
+  .select()
+  .from(user)
+  .where(eq(user.email, "zhangsan@example.com"));
+
+// 模糊查询
+const usersWithName = await db
+  .select()
+  .from(user)
+  .where(like(user.name, "%张%"));
+
+// 复合条件查询
+const verifiedUsers = await db
+  .select()
+  .from(user)
+  .where(
+    and(
+      eq(user.emailVerified, true),
+      like(user.email, "%@gmail.com")
+    )
+  );
+
+// 排序和分页
+const paginatedUsers = await db
+  .select()
+  .from(user)
+  .orderBy(desc(user.createdAt))
+  .limit(10)
+  .offset(0);
+```
+
+### 3. 更新 (Update)
+
+```typescript
+import { db } from "@/services/database/client";
+import { user } from "@/services/database/schema";
+import { eq } from "drizzle-orm";
+
+// 更新单个用户
+const updatedUser = await db
+  .update(user)
+  .set({
+    name: "张三丰",
+    emailVerified: true,
+    updatedAt: new Date(),
+  })
+  .where(eq(user.id, "user-id"))
+  .returning();
+
+// 批量更新
+const updatedUsers = await db
+  .update(user)
+  .set({
+    emailVerified: true,
+    updatedAt: new Date(),
+  })
+  .where(eq(user.emailVerified, false))
+  .returning();
+
+console.log("更新的用户:", updatedUsers);
+```
+
+### 4. 删除 (Delete)
+
+```typescript
+import { db } from "@/services/database/client";
+import { user } from "@/services/database/schema";
+import { eq, lt } from "drizzle-orm";
+
+// 删除单个用户
+const deletedUser = await db
+  .delete(user)
+  .where(eq(user.id, "user-id"))
+  .returning();
+
+// 批量删除（删除30天前创建的未验证用户）
+const thirtyDaysAgo = new Date();
+thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+const deletedUsers = await db
+  .delete(user)
+  .where(
+    and(
+      eq(user.emailVerified, false),
+      lt(user.createdAt, thirtyDaysAgo)
+    )
+  )
+  .returning();
+
+console.log("删除的用户:", deletedUsers);
+```
+
+## 高级查询
+
+### 1. 关联查询
+
+```typescript
+import { db } from "@/services/database/client";
+import { user, account, session } from "@/services/database/schema";
+import { eq } from "drizzle-orm";
+
+// 查询用户及其账户信息
+const usersWithAccounts = await db
+  .select({
+    user: user,
+    account: account,
+  })
+  .from(user)
+  .leftJoin(account, eq(user.id, account.userId));
+
+// 查询用户及其活跃会话
+const usersWithSessions = await db
+  .select({
+    userId: user.id,
+    userName: user.name,
+    userEmail: user.email,
+    sessionId: session.id,
+    sessionToken: session.token,
+    sessionExpiresAt: session.expiresAt,
+  })
+  .from(user)
+  .innerJoin(session, eq(user.id, session.userId))
+  .where(gt(session.expiresAt, new Date()));
+```
+
+### 2. 聚合查询
+
+```typescript
+import { db } from "@/services/database/client";
+import { user, session } from "@/services/database/schema";
+import { count, sql } from "drizzle-orm";
+
+// 统计用户数量
+const userCount = await db
+  .select({ count: count() })
+  .from(user);
+
+// 统计已验证用户数量
+const verifiedUserCount = await db
+  .select({ count: count() })
+  .from(user)
+  .where(eq(user.emailVerified, true));
+
+// 按月统计用户注册数量
+const monthlyRegistrations = await db
+  .select({
+    month: sql<string>`DATE_TRUNC('month', ${user.createdAt})`,
+    count: count(),
+  })
+  .from(user)
+  .groupBy(sql`DATE_TRUNC('month', ${user.createdAt})`)
+  .orderBy(sql`DATE_TRUNC('month', ${user.createdAt})`);
+```
+
+### 3. 事务处理
+
+```typescript
+import { db } from "@/services/database/client";
+import { user, account } from "@/services/database/schema";
+
+// 事务示例：创建用户和账户
+async function createUserWithAccount(userData: {
+  name: string;
+  email: string;
+  password: string;
+}) {
+  return await db.transaction(async (tx) => {
+    // 创建用户
+    const [newUser] = await tx
+      .insert(user)
+      .values({
+        id: crypto.randomUUID(),
+        name: userData.name,
+        email: userData.email,
+        emailVerified: false,
+      })
+      .returning();
+
+    // 创建账户
+    const [newAccount] = await tx
+      .insert(account)
+      .values({
+        id: crypto.randomUUID(),
+        userId: newUser.id,
+        accountId: newUser.id,
+        providerId: "email",
+        password: userData.password, // 实际应用中需要加密
+      })
+      .returning();
+
+    return { user: newUser, account: newAccount };
+  });
+}
+
+// 使用事务
+try {
+  const result = await createUserWithAccount({
+    name: "新用户",
+    email: "newuser@example.com",
+    password: "hashedPassword",
+  });
+  console.log("用户创建成功:", result);
+} catch (error) {
+  console.error("用户创建失败:", error);
+}
+```
+
+## 数据库迁移
+
+### 1. 生成迁移文件
+
+当你修改了 schema 文件后，需要生成迁移文件：
+
+```bash
+# 生成迁移文件
+npm run generate
+
+# 或者使用 drizzle-kit 直接
+npx drizzle-kit generate
+```
+
+### 2. 执行迁移
+
+```bash
+# 执行迁移
+npm run migrate
+
+# 或者使用 drizzle-kit 直接
+npx drizzle-kit migrate
+```
+
+### 3. 推送到数据库
+
+对于开发环境，可以直接推送 schema 到数据库：
+
+```bash
+# 直接推送 schema（仅开发环境）
+npm run db:push
+
+# 或者使用 drizzle-kit 直接
+npx drizzle-kit push
+```
+
+### 4. 迁移最佳实践
+
+```typescript
+// 添加新字段时使用默认值
+export const user = pgTable("user", {
+  // ... 现有字段
+  
+  // 新增字段，提供默认值
+  phoneNumber: text("phone_number").default(""),
+  isActive: boolean("is_active").default(true).notNull(),
+});
+
+// 重命名字段时的迁移策略
+// 1. 添加新字段
+// 2. 数据迁移
+// 3. 删除旧字段
+```
+
+## 性能优化
+
+### 1. 索引优化
+
+```sql
+-- 为常用查询字段添加索引
+CREATE INDEX idx_user_email ON user(email);
+CREATE INDEX idx_user_created_at ON user(created_at);
+CREATE INDEX idx_session_user_id ON session(user_id);
+CREATE INDEX idx_session_expires_at ON session(expires_at);
+```
+
+### 2. 查询优化
+
+```typescript
+// 使用 select 指定需要的字段
+const users = await db
+  .select({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+  })
+  .from(user);
+
+// 使用 limit 限制结果数量
+const recentUsers = await db
+  .select()
+  .from(user)
+  .orderBy(desc(user.createdAt))
+  .limit(20);
+
+// 使用 exists 进行存在性检查
+const hasActiveSession = await db
+  .select({ exists: sql`1` })
+  .from(session)
+  .where(
+    and(
+      eq(session.userId, userId),
+      gt(session.expiresAt, new Date())
+    )
+  )
+  .limit(1);
+```
+
+### 3. 连接池配置
+
+```typescript
+// 配置连接池
+const client = postgres(databaseUrl, {
+  max: 20, // 最大连接数
+  idle_timeout: 20, // 空闲超时时间（秒）
+  connect_timeout: 10, // 连接超时时间（秒）
+});
+```
+
+## 数据验证
+
+### 1. 使用 Zod 进行数据验证
+
+```typescript
+import { z } from "zod";
+
+// 用户数据验证 schema
+export const userSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  email: z.string().email(),
+  emailVerified: z.boolean().default(false),
+  image: z.string().url().optional(),
+});
+
+// 创建用户时的验证
+export const createUserSchema = userSchema.omit({ 
+  id: true,
+  emailVerified: true,
+});
+
+// 更新用户时的验证
+export const updateUserSchema = userSchema.partial().omit({ 
+  id: true 
+});
+
+// 使用示例
+async function createUser(data: unknown) {
+  const validatedData = createUserSchema.parse(data);
+  
+  return await db
+    .insert(user)
+    .values({
+      id: crypto.randomUUID(),
+      ...validatedData,
+    })
+    .returning();
+}
+```
+
+### 2. 数据库约束
+
+```typescript
+// 在 schema 中定义约束
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(), // 唯一约束
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  // 复合索引
+  emailCreatedAtIdx: index("email_created_at_idx")
+    .on(table.email, table.createdAt),
+}));
+```
+
+## 错误处理
+
+### 1. 常见错误类型
+
+```typescript
+import { DatabaseError } from "pg";
+
+async function handleDatabaseOperation() {
+  try {
+    const result = await db
+      .insert(user)
+      .values({
+        id: crypto.randomUUID(),
+        name: "测试用户",
+        email: "test@example.com",
+      })
+      .returning();
+    
+    return result;
+  } catch (error) {
+    if (error instanceof DatabaseError) {
+      switch (error.code) {
+        case "23505": // 唯一约束违反
+          throw new Error("邮箱已存在");
+        case "23503": // 外键约束违反
+          throw new Error("关联数据不存在");
+        case "23502": // 非空约束违反
+          throw new Error("必填字段不能为空");
+        default:
+          throw new Error("数据库操作失败");
+      }
+    }
+    throw error;
+  }
+}
+```
+
+### 2. 重试机制
+
+```typescript
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries: number = 3
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error as Error;
+      
+      // 如果是连接错误，等待后重试
+      if (error instanceof Error && error.message.includes("connection")) {
+        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        continue;
+      }
+      
+      // 其他错误直接抛出
+      throw error;
+    }
+  }
+  
+  throw lastError!;
+}
+
+// 使用示例
+const users = await withRetry(() => 
+  db.select().from(user).limit(10)
+);
+```
+
+## 最佳实践
+
+### 1. 数据库设计原则
+
+- **使用有意义的表名和字段名**
+- **为外键添加适当的约束**
+- **使用时间戳字段记录创建和更新时间**
+- **为常用查询字段添加索引**
+- **使用事务确保数据一致性**
+
+### 2. 查询优化建议
+
+```typescript
+// ✅ 好的做法：只选择需要的字段
+const users = await db
+  .select({
+    id: user.id,
+    name: user.name,
+  })
+  .from(user);
+
+// ❌ 避免：选择所有字段
+const users = await db.select().from(user);
+
+// ✅ 好的做法：使用分页
+const users = await db
+  .select()
+  .from(user)
+  .limit(20)
+  .offset(page * 20);
+
+// ❌ 避免：查询所有数据
+const users = await db.select().from(user);
+```
+
+### 3. 安全考虑
+
+```typescript
+// ✅ 使用参数化查询（Drizzle 自动处理）
+const user = await db
+  .select()
+  .from(user)
+  .where(eq(user.email, userEmail));
+
+// ❌ 避免：字符串拼接（容易 SQL 注入）
+// const query = `SELECT * FROM user WHERE email = '${userEmail}'`;
+
+// ✅ 验证输入数据
+const validatedData = userSchema.parse(inputData);
+
+// ✅ 使用事务确保数据一致性
+await db.transaction(async (tx) => {
+  // 多个相关操作
+});
+```
+
+## 监控和调试
+
+### 1. 启用查询日志
+
+```typescript
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+
+const client = postgres(databaseUrl, {
+  debug: process.env.NODE_ENV === "development",
+});
+
+const db = drizzle(client, { 
+  schema,
+  logger: process.env.NODE_ENV === "development",
+});
+```
+
+### 2. 性能监控
+
+```typescript
+// 查询执行时间监控
+async function monitorQuery<T>(
+  queryName: string,
+  query: () => Promise<T>
+): Promise<T> {
+  const start = Date.now();
+  try {
+    const result = await query();
+    const duration = Date.now() - start;
+    console.log(`Query ${queryName} took ${duration}ms`);
+    return result;
+  } catch (error) {
+    const duration = Date.now() - start;
+    console.error(`Query ${queryName} failed after ${duration}ms:`, error);
+    throw error;
+  }
+}
+
+// 使用示例
+const users = await monitorQuery(
+  "getUserList",
+  () => db.select().from(user).limit(10)
+);
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **连接失败**
+   - 检查 `DATABASE_URL` 配置
+   - 确认数据库服务运行状态
+   - 验证网络连接
+
+2. **迁移失败**
+   - 检查数据库权限
+   - 确认 schema 语法正确
+   - 查看迁移日志
+
+3. **查询性能问题**
+   - 添加适当的索引
+   - 优化查询条件
+   - 使用 EXPLAIN 分析查询计划
+
+### 调试技巧
+
+```typescript
+// 启用详细日志
+const db = drizzle(client, {
+  schema,
+  logger: {
+    logQuery: (query, params) => {
+      console.log("SQL:", query);
+      console.log("Params:", params);
+    },
+  },
+});
+
+// 使用 .toSQL() 查看生成的 SQL
+const query = db
+  .select()
+  .from(user)
+  .where(eq(user.email, "test@example.com"));
+
+console.log(query.toSQL());
+```
+
+通过本文档，你应该能够熟练使用 Vibe Template 中的 Drizzle ORM 进行数据库操作。如需更多信息，请参考 [Drizzle ORM 官方文档](https://orm.drizzle.team/)。

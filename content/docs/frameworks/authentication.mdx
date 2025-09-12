@@ -1,0 +1,696 @@
+---
+title: authentication
+---
+
+
+# BetterAuth 认证系统
+
+BetterAuth 是一个现代化的 TypeScript 认证库，为 Vibe Template 提供了完整的用户认证解决方案。本文档将详细介绍如何配置和使用 BetterAuth 认证系统。
+
+## 概述
+
+Vibe Template 集成了 BetterAuth 认证系统，提供以下功能：
+
+- 📧 邮箱密码认证
+- 🔐 会话管理
+- 🛡️ 安全的密码处理
+- 📱 客户端和服务端认证状态同步
+- 🗄️ 与 Drizzle ORM 的无缝集成
+
+## 系统架构
+
+```mermaid
+graph TB
+    A[客户端] --> B[Auth Client]
+    B --> C[API Routes]
+    C --> D[Better Auth Core]
+    D --> E[Drizzle Adapter]
+    E --> F[数据库]
+
+    subgraph "认证流程"
+        G[登录/注册] --> H[验证凭据]
+        H --> I[创建会话]
+        I --> J[返回用户信息]
+    end
+```
+
+## 快速开始
+
+### 1. 环境配置
+
+首先，确保在 `.env` 文件中配置了必要的环境变量：
+
+```bash
+# Better Auth 配置
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# 数据库配置
+DATABASE_URL=postgresql://postgres:password@localhost:5432/your_database
+```
+
+### 2. 基本使用
+
+在客户端组件中使用认证功能：
+
+```tsx
+"use client";
+import { useSession, signIn, signOut } from "@/services/userauth/auth-client";
+
+export function AuthExample() {
+  const { data: session, isPending } = useSession();
+
+  if (isPending) {
+    return <div>加载中...</div>;
+  }
+
+  if (session) {
+    return (
+      <div>
+        <p>欢迎, {session.user.name}!</p>
+        <button onClick={() => signOut()}>退出登录</button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() =>
+        signIn.email({
+          email: "user@example.com",
+          password: "password",
+        })
+      }
+    >
+      登录
+    </button>
+  );
+}
+```
+
+## 核心配置
+
+### 服务端配置
+
+BetterAuth 的核心配置位于 `src/services/userauth/auth.ts`：
+
+```typescript
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/services/database/client";
+import * as schema from "@/services/database/schema";
+
+export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  database: drizzleAdapter(db, {
+    provider: "sqlite", // 或 "postgresql"
+    schema,
+  }),
+  emailAndPassword: {
+    enabled: true,
+  },
+});
+```
+
+### 客户端配置
+
+客户端配置位于 `src/services/userauth/auth-client.ts`：
+
+```typescript
+"use client";
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3000",
+});
+
+export const { signUp, signIn, signOut, useSession } = authClient;
+```
+
+## 数据库模式
+
+BetterAuth 需要以下数据库表结构（位于 `src/services/database/schema.ts`）：
+
+### 用户表 (user)
+
+```typescript
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name"),
+  email: text("email").notNull(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: timestamp("updated_at")
+    .notNull()
+    .default(sql`CURRENT_TIMESTAMP`),
+});
+```
+
+### 账户表 (account)
+
+```typescript
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  password: text("password"), // 用于邮箱密码认证
+  // ... 其他字段
+});
+```
+
+### 会话表 (session)
+
+```typescript
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id),
+  token: text("token").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  // ... 其他字段
+});
+```
+
+## 用户注册流程
+
+### 1. 注册表单组件
+
+```tsx
+"use client";
+import { useState } from "react";
+import { signUp } from "@/services/userauth/auth-client";
+import { toast } from "sonner";
+
+export function RegisterForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const result = await signUp.email({
+        email,
+        password,
+        name,
+        callbackURL: "/login",
+      });
+
+      if (result.error) {
+        toast.error(result.error.message);
+      } else {
+        toast.success("注册成功！请登录。");
+      }
+    } catch (error) {
+      toast.error("注册失败，请重试。");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        placeholder="姓名"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        required
+      />
+      <input
+        type="email"
+        placeholder="邮箱"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="密码"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit" disabled={loading}>
+        {loading ? "注册中..." : "注册"}
+      </button>
+    </form>
+  );
+}
+```
+
+### 2. 注册流程说明
+
+1. **用户输入信息**：姓名、邮箱、密码
+2. **客户端验证**：基本的表单验证
+3. **发送注册请求**：调用 `signUp.email()` 方法
+4. **服务端处理**：
+   - 验证邮箱格式和密码强度
+   - 检查邮箱是否已存在
+   - 创建用户记录
+   - 生成加密密码
+5. **返回结果**：成功或错误信息
+
+## 用户登录流程
+
+### 1. 登录表单组件
+
+```tsx
+"use client";
+import { useState } from "react";
+import { signIn } from "@/services/userauth/auth-client";
+
+export function LoginForm() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      await signIn.email({
+        email,
+        password,
+        callbackURL: "/",
+      });
+    } catch (err: any) {
+      setError(err?.message ?? "登录失败");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="email"
+        placeholder="邮箱"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="密码"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        required
+      />
+      <button type="submit" disabled={loading}>
+        {loading ? "登录中..." : "登录"}
+      </button>
+      {error && <p className="error">{error}</p>}
+    </form>
+  );
+}
+```
+
+### 2. 登录流程说明
+
+1. **用户输入凭据**：邮箱和密码
+2. **客户端验证**：基本的表单验证
+3. **发送登录请求**：调用 `signIn.email()` 方法
+4. **服务端验证**：
+   - 查找用户记录
+   - 验证密码
+   - 创建会话
+   - 设置认证 Cookie
+5. **重定向**：登录成功后跳转到指定页面
+
+## 会话管理
+
+### 1. 会话状态检查
+
+```tsx
+"use client";
+import { useSession } from "@/services/userauth/auth-client";
+
+export function SessionExample() {
+  const { data: session, isPending, error } = useSession();
+
+  if (isPending) {
+    return <div>检查登录状态...</div>;
+  }
+
+  if (error) {
+    return <div>会话错误: {error.message}</div>;
+  }
+
+  if (session) {
+    return (
+      <div>
+        <h2>用户信息</h2>
+        <p>ID: {session.user.id}</p>
+        <p>姓名: {session.user.name}</p>
+        <p>邮箱: {session.user.email}</p>
+        <p>邮箱已验证: {session.user.emailVerified ? "是" : "否"}</p>
+      </div>
+    );
+  }
+
+  return <div>未登录</div>;
+}
+```
+
+### 2. 服务端会话验证
+
+```typescript
+import { auth } from "@/services/userauth/auth";
+import { headers } from "next/headers";
+
+export async function getServerSession() {
+  const session = await auth.api.getSession({
+    headers: headers(),
+  });
+
+  return session;
+}
+
+// 在 Server Component 中使用
+export default async function ProtectedPage() {
+  const session = await getServerSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  return (
+    <div>
+      <h1>受保护的页面</h1>
+      <p>欢迎, {session.user.name}!</p>
+    </div>
+  );
+}
+```
+
+## 权限管理
+
+### 1. 路由保护
+
+创建一个高阶组件来保护需要认证的页面：
+
+```tsx
+"use client";
+import { useSession } from "@/services/userauth/auth-client";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+
+export function withAuth<P extends object>(Component: React.ComponentType<P>) {
+  return function AuthenticatedComponent(props: P) {
+    const { data: session, isPending } = useSession();
+    const router = useRouter();
+
+    useEffect(() => {
+      if (!isPending && !session) {
+        router.push("/login");
+      }
+    }, [session, isPending, router]);
+
+    if (isPending) {
+      return <div>验证中...</div>;
+    }
+
+    if (!session) {
+      return null;
+    }
+
+    return <Component {...props} />;
+  };
+}
+
+// 使用示例
+const ProtectedPage = withAuth(() => {
+  return <div>这是受保护的页面</div>;
+});
+```
+
+### 2. 中间件保护
+
+创建 `middleware.ts` 文件来保护 API 路由：
+
+```typescript
+import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/services/userauth/auth";
+
+export async function middleware(request: NextRequest) {
+  // 检查是否是受保护的路由
+  if (request.nextUrl.pathname.startsWith("/api/protected")) {
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session) {
+      return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+    }
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/api/protected/:path*"],
+};
+```
+
+## API 路由集成
+
+### 1. 认证 API 路由
+
+BetterAuth 自动处理认证相关的 API 路由，位于 `src/app/api/auth/[...all]/route.ts`：
+
+```typescript
+import { toNextJsHandler } from "better-auth/next-js";
+import { auth } from "@/services/userauth/auth";
+
+export const { GET, POST } = toNextJsHandler(auth);
+```
+
+这个路由处理以下端点：
+
+- `POST /api/auth/sign-in/email` - 邮箱登录
+- `POST /api/auth/sign-up/email` - 邮箱注册
+- `POST /api/auth/sign-out` - 退出登录
+- `GET /api/auth/session` - 获取会话信息
+
+### 2. 自定义 API 路由
+
+创建需要认证的 API 路由：
+
+```typescript
+// app/api/protected/profile/route.ts
+import { auth } from "@/services/userauth/auth";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  const session = await auth.api.getSession({
+    headers: request.headers,
+  });
+
+  if (!session) {
+    return NextResponse.json({ error: "未授权访问" }, { status: 401 });
+  }
+
+  // 返回用户信息
+  return NextResponse.json({
+    user: session.user,
+  });
+}
+```
+
+## 错误处理
+
+### 1. 常见错误类型
+
+```typescript
+interface AuthError {
+  message: string;
+  code: string;
+}
+
+// 常见错误代码
+const AUTH_ERRORS = {
+  INVALID_CREDENTIALS: "凭据无效",
+  USER_NOT_FOUND: "用户不存在",
+  EMAIL_ALREADY_EXISTS: "邮箱已存在",
+  WEAK_PASSWORD: "密码强度不够",
+  SESSION_EXPIRED: "会话已过期",
+} as const;
+```
+
+### 2. 错误处理示例
+
+```tsx
+"use client";
+import { useState } from "react";
+import { signIn } from "@/services/userauth/auth-client";
+
+export function LoginWithErrorHandling() {
+  const [error, setError] = useState<string | null>(null);
+
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      setError(null);
+      await signIn.email({ email, password });
+    } catch (err: any) {
+      // 处理不同类型的错误
+      switch (err.code) {
+        case "INVALID_CREDENTIALS":
+          setError("邮箱或密码错误");
+          break;
+        case "USER_NOT_FOUND":
+          setError("用户不存在，请先注册");
+          break;
+        default:
+          setError("登录失败，请重试");
+      }
+    }
+  };
+
+  return (
+    <div>
+      {error && <div className="error-message">{error}</div>}
+      {/* 登录表单 */}
+    </div>
+  );
+}
+```
+
+## 最佳实践
+
+### 1. 安全配置
+
+```typescript
+// 生产环境配置
+export const auth = betterAuth({
+  baseURL: process.env.BETTER_AUTH_URL,
+  database: drizzleAdapter(db, {
+    provider: "postgresql",
+    schema,
+  }),
+  emailAndPassword: {
+    enabled: true,
+    minPasswordLength: 8,
+    maxPasswordLength: 128,
+  },
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 天
+    updateAge: 60 * 60 * 24, // 1 天
+  },
+  advanced: {
+    crossSubDomainCookies: {
+      enabled: true,
+      domain: ".yourdomain.com",
+    },
+  },
+});
+```
+
+### 2. 密码安全
+
+- 使用强密码策略（最少 8 位，包含大小写字母、数字和特殊字符）
+- 实施密码重试限制
+- 考虑添加双因素认证
+
+### 3. 会话管理
+
+- 设置合理的会话过期时间
+- 实施会话刷新机制
+- 在敏感操作前重新验证
+
+### 4. 监控和日志
+
+```typescript
+// 添加认证事件监听
+auth.on("session.created", (session) => {
+  console.log("用户登录:", session.user.email);
+});
+
+auth.on("session.deleted", (session) => {
+  console.log("用户退出:", session.user.email);
+});
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **会话不持久**
+
+   - 检查 Cookie 设置
+   - 确认域名配置正确
+
+2. **登录后立即退出**
+
+   - 检查数据库连接
+   - 验证会话表结构
+
+3. **CORS 错误**
+   - 配置正确的 `baseURL`
+   - 检查客户端和服务端 URL 一致性
+
+### 调试技巧
+
+```typescript
+// 启用调试模式
+export const auth = betterAuth({
+  // ... 其他配置
+  logger: {
+    level: "debug",
+  },
+});
+```
+
+## 扩展功能
+
+### 1. 社交登录
+
+虽然当前模板主要使用邮箱密码认证，但 BetterAuth 支持多种社交登录：
+
+```typescript
+// 添加 Google 登录
+export const auth = betterAuth({
+  // ... 其他配置
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
+});
+```
+
+### 2. 邮箱验证
+
+```typescript
+export const auth = betterAuth({
+  // ... 其他配置
+  emailAndPassword: {
+    enabled: true,
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+  },
+});
+```
+
+通过本文档，你应该能够完全理解和使用 Vibe Template 中的 BetterAuth 认证系统。如有问题，请参考 [BetterAuth 官方文档](https://www.better-auth.com/docs) 或在项目仓库中提出 Issue。

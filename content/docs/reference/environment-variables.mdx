@@ -1,0 +1,500 @@
+---
+title: env
+---
+
+# 环境变量配置
+
+本文档详细说明了 Vibe Template 项目中使用的所有环境变量，包括开发和生产环境的配置指南，以及安全管理建议。
+
+## 概述
+
+环境变量用于配置应用程序的各种设置，包括数据库连接、认证配置、第三方服务集成等。正确配置环境变量对于应用程序的安全性和功能性至关重要。
+
+## 必需的环境变量
+
+### 数据库配置
+
+#### DATABASE_URL
+- **类型**: `string`
+- **必需**: ✅
+- **说明**: 数据库连接字符串
+- **格式**: `postgresql://username:password@host:port/database`
+
+**示例**:
+```bash
+# 本地 PostgreSQL
+DATABASE_URL=postgresql://postgres:password@localhost:5432/vibe_template
+
+# Supabase
+DATABASE_URL=postgresql://postgres:[password]@[host]:5432/postgres
+
+# Railway
+DATABASE_URL=postgresql://postgres:[password]@[host]:[port]/railway
+
+# Vercel Postgres
+DATABASE_URL=postgresql://[user]:[password]@[host]/[database]?sslmode=require
+```
+
+**验证**:
+```typescript
+import { z } from 'zod';
+
+const databaseUrlSchema = z.string().url().refine(
+  (url) => url.startsWith('postgresql://'),
+  { message: 'DATABASE_URL 必须是 PostgreSQL 连接字符串' }
+);
+```
+
+### 认证配置
+
+#### BETTER_AUTH_URL
+- **类型**: `string`
+- **必需**: ✅
+- **说明**: 认证服务的基础 URL
+- **开发环境**: `http://localhost:3000`
+- **生产环境**: 你的域名 URL
+
+**示例**:
+```bash
+# 开发环境
+BETTER_AUTH_URL=http://localhost:3000
+
+# 生产环境
+BETTER_AUTH_URL=https://your-domain.com
+```
+
+#### NEXT_PUBLIC_BETTER_AUTH_URL
+- **类型**: `string`
+- **必需**: ✅
+- **说明**: 客户端可访问的认证 URL
+- **注意**: 以 `NEXT_PUBLIC_` 开头的变量会暴露给客户端
+
+**示例**:
+```bash
+# 开发环境
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+
+# 生产环境
+NEXT_PUBLIC_BETTER_AUTH_URL=https://your-domain.com
+```
+
+#### AUTH_SECRET
+- **类型**: `string`
+- **必需**: ✅ (生产环境)
+- **说明**: 用于签名和加密的密钥
+- **生成方式**: `openssl rand -base64 32`
+
+**示例**:
+```bash
+AUTH_SECRET=your-super-secret-key-here
+```
+
+**生成密钥**:
+```bash
+# 使用 OpenSSL 生成
+openssl rand -base64 32
+
+# 使用 Node.js 生成
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+```
+
+## 可选的环境变量
+
+### OAuth 提供商配置
+
+#### GitHub OAuth
+```bash
+GITHUB_CLIENT_ID=your-github-client-id
+GITHUB_CLIENT_SECRET=your-github-client-secret
+```
+
+#### Google OAuth
+```bash
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+```
+
+### 第三方服务集成
+
+#### Stripe 支付
+```bash
+STRIPE_PUBLIC_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+```
+
+#### Vercel AI SDK
+```bash
+OPENAI_API_KEY=sk-...
+ANTHROPIC_API_KEY=sk-ant-...
+```
+
+#### 邮件服务
+```bash
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+```
+
+### 开发和调试
+
+#### NODE_ENV
+- **类型**: `string`
+- **默认值**: `development`
+- **可选值**: `development` | `production` | `test`
+
+```bash
+NODE_ENV=development
+```
+
+#### DEBUG
+- **类型**: `string`
+- **说明**: 启用调试日志
+- **示例**: `DEBUG=app:*` 或 `DEBUG=database,auth`
+
+```bash
+DEBUG=app:*
+```
+
+## 环境配置文件
+
+### .env.local (推荐)
+用于本地开发的环境变量，不会被提交到版本控制。
+
+```bash
+# .env.local
+DATABASE_URL=postgresql://postgres:password@localhost:5432/vibe_template
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+AUTH_SECRET=your-local-secret-key
+```
+
+### .env.example
+提供环境变量模板，应该提交到版本控制。
+
+```bash
+# .env.example
+# Database Configuration
+DATABASE_URL=postgresql://username:password@localhost:5432/database_name
+
+# Better Auth Configuration
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+AUTH_SECRET=your-secret-key-here
+
+# Optional: OAuth Providers
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
+
+# Optional: Stripe Integration
+STRIPE_PUBLIC_KEY=
+STRIPE_SECRET_KEY=
+```
+
+### .env.production
+生产环境专用配置（如果需要）。
+
+```bash
+# .env.production
+NODE_ENV=production
+DATABASE_URL=postgresql://prod-user:prod-pass@prod-host:5432/prod-db
+BETTER_AUTH_URL=https://your-domain.com
+NEXT_PUBLIC_BETTER_AUTH_URL=https://your-domain.com
+```
+
+## 环境变量加载顺序
+
+Next.js 按以下顺序加载环境变量：
+
+1. `.env.local` (总是被加载，除了 test 环境)
+2. `.env.${NODE_ENV}.local`
+3. `.env.${NODE_ENV}`
+4. `.env`
+
+**优先级**: 较早加载的文件具有更高的优先级。
+
+## 环境变量验证
+
+### 运行时验证
+
+```typescript
+// lib/env.ts
+import { z } from 'zod';
+
+const envSchema = z.object({
+  // 数据库
+  DATABASE_URL: z.string().url(),
+  
+  // 认证
+  BETTER_AUTH_URL: z.string().url(),
+  NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url(),
+  AUTH_SECRET: z.string().min(32, 'AUTH_SECRET 至少需要 32 个字符'),
+  
+  // 可选的 OAuth
+  GITHUB_CLIENT_ID: z.string().optional(),
+  GITHUB_CLIENT_SECRET: z.string().optional(),
+  
+  // 环境
+  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
+});
+
+export const env = envSchema.parse(process.env);
+```
+
+### 构建时验证
+
+```typescript
+// next.config.ts
+const requiredEnvVars = [
+  'DATABASE_URL',
+  'BETTER_AUTH_URL',
+  'NEXT_PUBLIC_BETTER_AUTH_URL',
+];
+
+// 验证必需的环境变量
+requiredEnvVars.forEach((envVar) => {
+  if (!process.env[envVar]) {
+    throw new Error(`缺少必需的环境变量: ${envVar}`);
+  }
+});
+```
+
+## 不同环境的配置指南
+
+### 开发环境设置
+
+1. **复制示例文件**:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+2. **配置本地数据库**:
+   ```bash
+   # 使用 Docker 启动 PostgreSQL
+   docker run --name postgres-dev -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres
+   
+   # 更新 .env.local
+   DATABASE_URL=postgresql://postgres:password@localhost:5432/vibe_template
+   ```
+
+3. **生成认证密钥**:
+   ```bash
+   # 生成并添加到 .env.local
+   echo "AUTH_SECRET=$(openssl rand -base64 32)" >> .env.local
+   ```
+
+### 生产环境设置
+
+1. **使用环境变量管理服务**:
+   - Vercel: 在项目设置中配置
+   - Railway: 使用 Railway CLI 或 Web 界面
+   - Docker: 使用 docker-compose.yml 或 Kubernetes secrets
+
+2. **Vercel 部署配置**:
+   ```bash
+   # 使用 Vercel CLI 设置环境变量
+   vercel env add DATABASE_URL production
+   vercel env add BETTER_AUTH_URL production
+   vercel env add AUTH_SECRET production
+   ```
+
+3. **Docker 部署配置**:
+   ```yaml
+   # docker-compose.yml
+   version: '3.8'
+   services:
+     app:
+       build: .
+       environment:
+         - DATABASE_URL=${DATABASE_URL}
+         - BETTER_AUTH_URL=${BETTER_AUTH_URL}
+         - AUTH_SECRET=${AUTH_SECRET}
+       env_file:
+         - .env.production
+   ```
+
+### 测试环境设置
+
+```bash
+# .env.test
+NODE_ENV=test
+DATABASE_URL=postgresql://postgres:password@localhost:5432/vibe_template_test
+BETTER_AUTH_URL=http://localhost:3000
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+AUTH_SECRET=test-secret-key-for-testing-only
+```
+
+## 安全最佳实践
+
+### 1. 敏感信息保护
+
+**不要做**:
+```bash
+# ❌ 不要在代码中硬编码敏感信息
+const apiKey = 'sk-1234567890abcdef';
+```
+
+**应该做**:
+```bash
+# ✅ 使用环境变量
+const apiKey = process.env.API_KEY;
+```
+
+### 2. 环境变量命名规范
+
+```bash
+# ✅ 好的命名
+DATABASE_URL=...
+STRIPE_SECRET_KEY=...
+NEXT_PUBLIC_API_URL=...
+
+# ❌ 避免的命名
+db=...
+key=...
+url=...
+```
+
+### 3. 客户端变量安全
+
+```bash
+# ✅ 公开的配置（以 NEXT_PUBLIC_ 开头）
+NEXT_PUBLIC_API_URL=https://api.example.com
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_...
+
+# ❌ 不要暴露敏感信息给客户端
+NEXT_PUBLIC_DATABASE_URL=...  # 危险！
+NEXT_PUBLIC_SECRET_KEY=...    # 危险！
+```
+
+### 4. 密钥轮换
+
+```typescript
+// 定期轮换密钥的工具函数
+export const rotateSecret = () => {
+  const newSecret = crypto.randomBytes(32).toString('base64');
+  console.log('新的 AUTH_SECRET:', newSecret);
+  return newSecret;
+};
+```
+
+### 5. 环境隔离
+
+```typescript
+// 确保环境隔离
+const isDevelopment = process.env.NODE_ENV === 'development';
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (isProduction && !process.env.AUTH_SECRET) {
+  throw new Error('生产环境必须设置 AUTH_SECRET');
+}
+```
+
+## 故障排除
+
+### 常见问题
+
+1. **环境变量未加载**
+   ```bash
+   Error: Cannot read property 'DATABASE_URL' of undefined
+   ```
+   
+   **解决方案**:
+   - 检查文件名是否正确 (`.env.local`)
+   - 确保文件在项目根目录
+   - 重启开发服务器
+
+2. **数据库连接失败**
+   ```bash
+   Error: connect ECONNREFUSED 127.0.0.1:5432
+   ```
+   
+   **解决方案**:
+   - 检查数据库是否运行
+   - 验证 DATABASE_URL 格式
+   - 检查网络连接和防火墙设置
+
+3. **认证配置错误**
+   ```bash
+   Error: Invalid redirect URI
+   ```
+   
+   **解决方案**:
+   - 确保 BETTER_AUTH_URL 与实际域名匹配
+   - 检查 OAuth 应用配置
+   - 验证 HTTPS 设置（生产环境）
+
+### 调试工具
+
+```typescript
+// 环境变量调试工具
+export const debugEnv = () => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log('环境变量状态:');
+    console.log('DATABASE_URL:', process.env.DATABASE_URL ? '✅ 已设置' : '❌ 未设置');
+    console.log('BETTER_AUTH_URL:', process.env.BETTER_AUTH_URL ? '✅ 已设置' : '❌ 未设置');
+    console.log('AUTH_SECRET:', process.env.AUTH_SECRET ? '✅ 已设置' : '❌ 未设置');
+  }
+};
+
+// 在应用启动时调用
+debugEnv();
+```
+
+### 环境变量检查脚本
+
+```javascript
+// scripts/check-env.js
+const requiredVars = [
+  'DATABASE_URL',
+  'BETTER_AUTH_URL',
+  'NEXT_PUBLIC_BETTER_AUTH_URL',
+];
+
+const optionalVars = [
+  'AUTH_SECRET',
+  'GITHUB_CLIENT_ID',
+  'STRIPE_SECRET_KEY',
+];
+
+console.log('🔍 检查环境变量...\n');
+
+// 检查必需变量
+let hasErrors = false;
+requiredVars.forEach(varName => {
+  if (process.env[varName]) {
+    console.log(`✅ ${varName}: 已设置`);
+  } else {
+    console.log(`❌ ${varName}: 未设置 (必需)`);
+    hasErrors = true;
+  }
+});
+
+// 检查可选变量
+optionalVars.forEach(varName => {
+  if (process.env[varName]) {
+    console.log(`✅ ${varName}: 已设置`);
+  } else {
+    console.log(`⚠️  ${varName}: 未设置 (可选)`);
+  }
+});
+
+if (hasErrors) {
+  console.log('\n❌ 存在缺失的必需环境变量');
+  process.exit(1);
+} else {
+  console.log('\n✅ 所有必需的环境变量都已设置');
+}
+```
+
+**使用方法**:
+```bash
+node scripts/check-env.js
+```
+
+## 相关文档
+
+- [配置参考](./configuration)
+- [安装指南](../getting-started/installation)
+- [部署指南](../guides/deployment)
+- [安全最佳实践](../guides/security)

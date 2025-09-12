@@ -19,35 +19,37 @@ const plans = [
     popular: false,
   },
   {
-    name: "Professional",
-    id: "plan-pro",
+    name: "Community",
+    id: "plan-community",
     href: "#",
-    price: { monthly: "$19", annually: "$190" },
-    description: "Ideal for growing teams and commercial projects",
-    actionTitle: "Buy Now",
+    price: { monthly: "$19", annually: "$19" },
+    billing: "yearly",
+    description: "Join our community and access premium resources",
+    actionTitle: "Join Community",
     features: [
-      "Advanced component library",
-      "Multiple theme templates",
-      "Priority technical support",
-      "Customization services",
-      "Commercial license",
+      "Premium resource library",
+      "Community forum access",
+      "Monthly webinars",
+      "Code examples and templates",
+      "Email support",
     ],
     popular: true,
   },
   {
-    name: "Enterprise",
-    id: "plan-enterprise",
+    name: "Course",
+    id: "plan-course",
     href: "#",
-    price: { monthly: "$49", annually: "$490" },
-    description: "For large teams and enterprise-level projects",
-    actionTitle: "Contact Sales",
+    price: { monthly: "$199", annually: "$199" },
+    billing: "yearly",
+    description: "Comprehensive learning with personalized guidance",
+    actionTitle: "Enroll Now",
     features: [
-      "Unlimited usage",
-      "Dedicated technical consultant",
-      "Custom development services",
-      "24/7 priority support",
-      "Private deployment",
-      "Source code license",
+      "20 one-on-one sessions",
+      "Personalized learning path",
+      "Project-based curriculum",
+      "Direct mentor access",
+      "Certificate of completion",
+      "Lifetime course updates",
     ],
     popular: false,
   },
@@ -64,7 +66,7 @@ export function PricingSection() {
           </p>
         </div>
         <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-muted-foreground sm:text-center">
-          VibeCape offers flexible pricing options to suit developers and teams of all sizes. Kickstart your modern project development.
+          vibetake offers flexible pricing options to suit developers and teams of all sizes. Kickstart your modern project development.
         </p>
         <div className="mt-20 flow-root">
           <div className="isolate -mt-16 grid max-w-sm grid-cols-1 gap-y-16 gap-x-4 sm:mx-auto lg:-mx-8 lg:mt-0 lg:max-w-none lg:grid-cols-3 xl:-mx-4">
@@ -76,9 +78,13 @@ export function PricingSection() {
                   </CardTitle>
                   <CardDescription className="mt-6 flex items-baseline gap-x-1">
                     <span className="text-5xl font-bold tracking-tight text-primary">{plan.price.monthly}</span>
-                    <span className="text-sm font-semibold leading-6 text-muted-foreground">/month</span>
+                    <span className="text-sm font-semibold leading-6 text-muted-foreground">
+                      {plan.billing === 'yearly' ? '/year' : '/month'}
+                    </span>
                   </CardDescription>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">{plan.price.annually} billed annually</p>
+                  {plan.billing !== 'yearly' && (
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">{plan.price.annually} billed annually</p>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <p className="mt-10 text-sm font-semibold leading-6 text-primary">{plan.description}</p>
