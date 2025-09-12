@@ -15,6 +15,7 @@ import { useState, useEffect } from "react";
 import { signIn } from "@/services/userauth/auth-client";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 export function LoginForm({
   className,
@@ -28,7 +29,7 @@ export function LoginForm({
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const urlMessage = searchParams.get('message');
+    const urlMessage = searchParams.get("message");
     if (urlMessage) {
       setMessage(urlMessage);
     }
@@ -40,7 +41,12 @@ export function LoginForm({
     setMessage(null);
     setLoading(true);
     try {
-      await signIn.email({ email, password, callbackURL: "/" });
+      const res = await signIn.email({ email, password, callbackURL: "/" });
+      if (res?.error) {
+        toast.error(res.error.message);
+      } else {
+        toast.success("Login successful");
+      }
     } catch (err: any) {
       setError(err?.message ?? "Login failed");
     } finally {

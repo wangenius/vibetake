@@ -99,7 +99,7 @@ export const STRIPE_CONFIG = {
   currency: 'usd', // 默认货币
   successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
   cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/payment/cancel`,
-  webhookEndpoint: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/stripe`,
+  webhookEndpoint: `${process.env.NEXT_PUBLIC_APP_URL}/api/payment/webhooks/stripe`,
 } as const;
 
 // 支持的支付方式
@@ -814,7 +814,7 @@ export async function getUserSubscription(userId: string) {
 ### 2. 订阅管理 API
 
 ```typescript
-// src/app/api/subscription/create/route.ts
+// src/app/api/payment/subscription/create/route.ts
 import { createSubscription } from '@/services/payment/subscription';
 import { auth } from '@/services/userauth/auth';
 import { headers } from 'next/headers';
@@ -907,7 +907,7 @@ export function SubscriptionManager() {
 
   const fetchSubscriptionStatus = async () => {
     try {
-      const response = await fetch('/api/subscription/status');
+      const response = await fetch('/api/payment/subscription/status');
       const data = await response.json();
       
       if (response.ok) {
@@ -924,7 +924,7 @@ export function SubscriptionManager() {
     if (!status?.subscription) return;
 
     try {
-      const response = await fetch('/api/subscription/cancel', {
+      const response = await fetch('/api/payment/subscription/cancel', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1080,7 +1080,7 @@ export function SubscriptionManager() {
 ### 1. Webhook 端点
 
 ```typescript
-// src/app/api/webhooks/stripe/route.ts
+// src/app/api/payment/webhooks/stripe/route.ts
 import { stripe } from '@/services/payment/stripe-config';
 import { db } from '@/services/database/client';
 import { user } from '@/services/database/schema';
