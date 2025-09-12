@@ -7,9 +7,7 @@ import * as schema from "./schema";
 
 dotenv.config();
 
-const databaseUrl =
-  process.env.DATABASE_URL ||
-  "postgresql://postgres:password@localhost:5432/postgres";
+const databaseUrl = process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/postgres";
 const client = postgres(databaseUrl);
 const db = drizzle(client, { schema });
 

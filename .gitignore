@@ -48,3 +48,5 @@ data/*
 !data/readme.md
 drizzle
 supabase
+
+.vscode

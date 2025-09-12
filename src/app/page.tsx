@@ -9,7 +9,7 @@ import { SocialProof } from "@/components/sections/testimonials";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <Navbar />
       <HeroSection />
       <SocialProof />

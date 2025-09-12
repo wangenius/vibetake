@@ -1,10 +1,9 @@
-
 "use client";
 
-import { RegisterForm } from "@/components/page/register-form";
-import { useSession } from "@/services/userauth/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { RegisterForm } from "@/components/page/register-form";
+import { useSession } from "@/services/userauth/auth-client";
 
 export default function RegisterPage() {
   const { data: session, isPending } = useSession();

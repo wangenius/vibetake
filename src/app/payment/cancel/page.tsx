@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { XCircle, ArrowLeft } from "lucide-react";
+import { ArrowLeft, XCircle } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function PaymentCancelPage() {
   return (
@@ -17,9 +17,7 @@ export default function PaymentCancelPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-center text-muted-foreground">
-              您已取消了支付流程。如果您改变主意，可以随时重新开始。
-            </p>
+            <p className="text-center text-muted-foreground">您已取消了支付流程。如果您改变主意，可以随时重新开始。</p>
             <div className="flex flex-col gap-2">
               <Button asChild className="w-full">
                 <Link href="/payment">

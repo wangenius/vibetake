@@ -1,13 +1,8 @@
-import { source } from "@/lib/source";
-import {
-  DocsBody,
-  DocsDescription,
-  DocsPage,
-  DocsTitle,
-} from "fumadocs-ui/page";
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/page";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getMDXComponents } from "@/components/docs/mdx-components";
-import type { Metadata } from "next";
+import { source } from "@/lib/source";
 
 export default async function Page(props: PageProps<"/docs/[[...slug]]">) {
   const params = await props.params;
@@ -31,9 +26,7 @@ export async function generateStaticParams() {
   return source.generateParams();
 }
 
-export async function generateMetadata(
-  props: PageProps<"/docs/[[...slug]]">
-): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<"/docs/[[...slug]]">): Promise<Metadata> {
   const params = await props.params;
   const page = source.getPage(params.slug);
   if (!page) notFound();

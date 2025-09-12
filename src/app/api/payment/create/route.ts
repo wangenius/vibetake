@@ -1,8 +1,8 @@
-import { stripe, STRIPE_CONFIG } from "@/services/payment/stripe.config";
-import { auth } from "@/services/userauth/auth";
 import { headers } from "next/headers";
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
+import { STRIPE_CONFIG, stripe } from "@/services/payment/stripe.config";
+import { auth } from "@/services/userauth/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,13 +15,7 @@ export async function POST(req: NextRequest) {
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const {
-      priceId,
-      quantity = 1,
-      metadata = {},
-      successUrl,
-      cancelUrl,
-    } = await req.json();
+    const { priceId, quantity = 1, metadata = {}, successUrl, cancelUrl } = await req.json();
 
     // 验证价格 ID
     if (!priceId) {
@@ -49,10 +43,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (error) {
       console.error("Error creating/finding customer:", error);
-      return Response.json(
-        { error: "Customer creation failed" },
-        { status: 500 }
-      );
+      return Response.json({ error: "Customer creation failed" }, { status: 500 });
     }
 
     console.log(STRIPE_CONFIG);
@@ -71,9 +62,7 @@ export async function POST(req: NextRequest) {
       ? `${getAbsoluteUrl(successUrl)}?session_id={CHECKOUT_SESSION_ID}`
       : `${STRIPE_CONFIG.successUrl}?session_id={CHECKOUT_SESSION_ID}`;
 
-    const finalCancelUrl = cancelUrl
-      ? getAbsoluteUrl(cancelUrl)
-      : STRIPE_CONFIG.cancelUrl;
+    const finalCancelUrl = cancelUrl ? getAbsoluteUrl(cancelUrl) : STRIPE_CONFIG.cancelUrl;
 
     // 获取价格信息以确定支付模式
     let price;
@@ -133,9 +122,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error("Create checkout session error:", error);
-    return Response.json(
-      { error: "Failed to create checkout session" },
-      { status: 500 }
-    );
+    return Response.json({ error: "Failed to create checkout session" }, { status: 500 });
   }
 }

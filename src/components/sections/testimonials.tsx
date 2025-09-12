@@ -1,6 +1,6 @@
 import React from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type Testimonial = {
   body: string;
@@ -70,10 +70,7 @@ const TestimonialCard = ({ testimonial }: { testimonial: Testimonial }) => (
       </blockquote>
       <div className="mt-6 flex items-center gap-x-4">
         <Avatar>
-          <AvatarImage
-            src={testimonial.author.imageUrl}
-            alt={testimonial.author.name}
-          />
+          <AvatarImage src={testimonial.author.imageUrl} alt={testimonial.author.name} />
           <AvatarFallback>{testimonial.author.name.charAt(0)}</AvatarFallback>
         </Avatar>
         <div>
@@ -85,17 +82,10 @@ const TestimonialCard = ({ testimonial }: { testimonial: Testimonial }) => (
   </Card>
 );
 
-const TestimonialsGrid = ({
-  testimonials,
-}: {
-  testimonials: Testimonial[];
-}) => (
+const TestimonialsGrid = ({ testimonials }: { testimonials: Testimonial[] }) => (
   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {testimonials.map((testimonial) => (
-      <TestimonialCard
-        key={testimonial.author.handle}
-        testimonial={testimonial}
-      />
+      <TestimonialCard key={testimonial.author.handle} testimonial={testimonial} />
     ))}
   </div>
 );
@@ -105,12 +95,8 @@ export function SocialProof() {
     <div className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="text-center my-8">
-          <div className="text-sm font-semibold uppercase tracking-wide">
-            Developer Testimonials
-          </div>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-            Loved by Developers Worldwide
-          </h2>
+          <div className="text-sm font-semibold uppercase tracking-wide">Developer Testimonials</div>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Loved by Developers Worldwide</h2>
         </div>
         <TestimonialsGrid testimonials={testimonials} />
       </div>

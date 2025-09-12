@@ -1,25 +1,21 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { desc, like, or } from "drizzle-orm";
+import { ArrowLeft, Calendar, CheckCircle, Mail, Search, Users, XCircle } from "lucide-react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Users, Search, ArrowLeft, Mail, Calendar, CheckCircle, XCircle } from "lucide-react";
-import Link from "next/link";
 import { db } from "@/services/database/client";
 import { user } from "@/services/database/schema";
-import { desc, like, or } from "drizzle-orm";
 
 interface SearchParams {
   search?: string;
   page?: string;
 }
 
-export default async function UsersPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function UsersPage({ searchParams }: { searchParams: SearchParams }) {
   const search = searchParams.search || "";
   const page = Number(searchParams.page) || 1;
   const limit = 20;
@@ -28,10 +24,7 @@ export default async function UsersPage({
   // 构建查询条件
   let whereCondition;
   if (search) {
-    whereCondition = or(
-      like(user.name, `%${search}%`),
-      like(user.email, `%${search}%`)
-    );
+    whereCondition = or(like(user.name, `%${search}%`), like(user.email, `%${search}%`));
   }
 
   // 获取用户数据
@@ -44,10 +37,7 @@ export default async function UsersPage({
     .offset(offset);
 
   // 获取总数用于分页
-  const totalUsers = await db
-    .select({ count: user.id })
-    .from(user)
-    .where(whereCondition);
+  const totalUsers = await db.select({ count: user.id }).from(user).where(whereCondition);
 
   const totalCount = totalUsers.length;
   const totalPages = Math.ceil(totalCount / limit);
@@ -66,9 +56,7 @@ export default async function UsersPage({
           <Users className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">用户管理</h1>
         </div>
-        <p className="text-muted-foreground">
-          查看和管理所有注册用户
-        </p>
+        <p className="text-muted-foreground">查看和管理所有注册用户</p>
       </div>
 
       {/* 搜索和统计 */}
@@ -81,12 +69,7 @@ export default async function UsersPage({
             <form method="GET" className="flex gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  name="search"
-                  placeholder="搜索用户名或邮箱..."
-                  defaultValue={search}
-                  className="pl-10"
-                />
+                <Input name="search" placeholder="搜索用户名或邮箱..." defaultValue={search} className="pl-10" />
               </div>
               <Button type="submit">搜索</Button>
               {search && (
@@ -110,7 +93,9 @@ export default async function UsersPage({
               </div>
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">当前页</span>
-                <Badge variant="outline">{page}/{totalPages}</Badge>
+                <Badge variant="outline">
+                  {page}/{totalPages}
+                </Badge>
               </div>
             </div>
           </CardContent>
@@ -121,9 +106,7 @@ export default async function UsersPage({
       <Card>
         <CardHeader>
           <CardTitle>用户列表</CardTitle>
-          <CardDescription>
-            {search ? `搜索 "${search}" 的结果` : "所有注册用户"}
-          </CardDescription>
+          <CardDescription>{search ? `搜索 "${search}" 的结果` : "所有注册用户"}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -143,9 +126,7 @@ export default async function UsersPage({
                     <TableCell colSpan={5} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Users className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          {search ? "未找到匹配的用户" : "暂无用户数据"}
-                        </p>
+                        <p className="text-muted-foreground">{search ? "未找到匹配的用户" : "暂无用户数据"}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -184,9 +165,7 @@ export default async function UsersPage({
                           ) : (
                             <>
                               <XCircle className="w-4 h-4 text-red-500" />
-                              <Badge variant="destructive">
-                                未验证
-                              </Badge>
+                              <Badge variant="destructive">未验证</Badge>
                             </>
                           )}
                         </div>
@@ -195,13 +174,13 @@ export default async function UsersPage({
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm">
-                            {u.createdAt ? new Date(u.createdAt).toLocaleString('zh-CN') : "未知"}
+                            {u.createdAt ? new Date(u.createdAt).toLocaleString("zh-CN") : "未知"}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-muted-foreground">
-                          {u.updatedAt ? new Date(u.updatedAt).toLocaleString('zh-CN') : "未知"}
+                          {u.updatedAt ? new Date(u.updatedAt).toLocaleString("zh-CN") : "未知"}
                         </span>
                       </TableCell>
                     </TableRow>
@@ -219,14 +198,14 @@ export default async function UsersPage({
               </div>
               <div className="flex gap-2">
                 {page > 1 && (
-                  <Link href={`/admin/users?page=${page - 1}${search ? `&search=${search}` : ''}`}>
+                  <Link href={`/admin/users?page=${page - 1}${search ? `&search=${search}` : ""}`}>
                     <Button variant="outline" size="sm">
                       上一页
                     </Button>
                   </Link>
                 )}
                 {page < totalPages && (
-                  <Link href={`/admin/users?page=${page + 1}${search ? `&search=${search}` : ''}`}>
+                  <Link href={`/admin/users?page=${page + 1}${search ? `&search=${search}` : ""}`}>
                     <Button variant="outline" size="sm">
                       下一页
                     </Button>

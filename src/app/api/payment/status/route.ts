@@ -1,7 +1,7 @@
-import { stripe } from "@/services/payment/stripe.config";
-import { auth } from "@/services/userauth/auth";
 import { headers } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
+import { stripe } from "@/services/payment/stripe.config";
+import { auth } from "@/services/userauth/auth";
 
 // 获取用户订阅状态
 export async function GET(request: NextRequest) {
@@ -46,10 +46,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ subscription });
   } catch (error) {
     console.error("Get subscription status error:", error);
-    return NextResponse.json(
-      { error: "Failed to get subscription status" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to get subscription status" }, { status: 500 });
   }
 }
 
@@ -73,7 +70,7 @@ export async function POST(request: NextRequest) {
           error: "缺少支付意图ID",
           details: "请确保从支付页面正确跳转，并包含必要的支付参数",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -84,7 +81,7 @@ export async function POST(request: NextRequest) {
           error: "缺少支付状态参数",
           details: "支付重定向缺少状态信息，请重新发起支付",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -100,7 +97,7 @@ export async function POST(request: NextRequest) {
           error: "无效的支付意图ID",
           details: "无法找到对应的支付记录，请联系客服或重新发起支付",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -110,9 +107,7 @@ export async function POST(request: NextRequest) {
 
       if (paymentIntent.metadata?.subscriptionId) {
         try {
-          subscription = await stripe.subscriptions.retrieve(
-            paymentIntent.metadata.subscriptionId
-          );
+          subscription = await stripe.subscriptions.retrieve(paymentIntent.metadata.subscriptionId);
         } catch (error) {
           console.error("获取订阅信息失败:", error);
         }
@@ -207,7 +202,7 @@ export async function POST(request: NextRequest) {
         error: errorMessage,
         details: errorDetails,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

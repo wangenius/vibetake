@@ -1,15 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { desc, eq, like, or, sql } from "drizzle-orm";
+import { ArrowLeft, Calendar, Key, Mail, Search, Shield, User } from "lucide-react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Key, Search, ArrowLeft, Calendar, Shield, Mail, User } from "lucide-react";
-import Link from "next/link";
 import { db } from "@/services/database/client";
 import { account, user } from "@/services/database/schema";
-import { desc, like, or, eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
 
 interface SearchParams {
   search?: string;
@@ -17,11 +16,7 @@ interface SearchParams {
   provider?: string;
 }
 
-export default async function AccountsPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function AccountsPage({ searchParams }: { searchParams: SearchParams }) {
   const search = searchParams.search || "";
   const page = Number(searchParams.page) || 1;
   const provider = searchParams.provider || "all";
@@ -30,14 +25,10 @@ export default async function AccountsPage({
 
   // 构建查询条件
   let whereConditions = [];
-  
+
   if (search) {
     whereConditions.push(
-      or(
-        like(user.name, `%${search}%`),
-        like(user.email, `%${search}%`),
-        like(account.providerId, `%${search}%`)
-      )
+      or(like(user.name, `%${search}%`), like(user.email, `%${search}%`), like(account.providerId, `%${search}%`)),
     );
   }
 
@@ -65,7 +56,7 @@ export default async function AccountsPage({
     })
     .from(account)
     .leftJoin(user, eq(account.userId, user.id))
-    .where(whereConditions.length > 0 ? sql`${whereConditions.join(' AND ')}` : undefined)
+    .where(whereConditions.length > 0 ? sql`${whereConditions.join(" AND ")}` : undefined)
     .orderBy(desc(account.createdAt))
     .limit(limit)
     .offset(offset);
@@ -73,12 +64,13 @@ export default async function AccountsPage({
   // 获取统计信息
   const [totalAccounts, providerStats] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(account),
-    db.select({ 
-      providerId: account.providerId, 
-      count: sql<number>`count(*)` 
-    })
-    .from(account)
-    .groupBy(account.providerId),
+    db
+      .select({
+        providerId: account.providerId,
+        count: sql<number>`count(*)`,
+      })
+      .from(account)
+      .groupBy(account.providerId),
   ]);
 
   const totalCount = totalAccounts[0]?.count || 0;
@@ -87,32 +79,32 @@ export default async function AccountsPage({
   // 获取提供商图标
   const getProviderIcon = (providerId: string) => {
     switch (providerId.toLowerCase()) {
-      case 'google':
-        return '🔍';
-      case 'github':
-        return '🐙';
-      case 'discord':
-        return '💬';
-      case 'email':
-      case 'credential':
-        return '📧';
+      case "google":
+        return "🔍";
+      case "github":
+        return "🐙";
+      case "discord":
+        return "💬";
+      case "email":
+      case "credential":
+        return "📧";
       default:
-        return '🔑';
+        return "🔑";
     }
   };
 
   // 格式化提供商名称
   const formatProviderName = (providerId: string) => {
     switch (providerId.toLowerCase()) {
-      case 'google':
-        return 'Google';
-      case 'github':
-        return 'GitHub';
-      case 'discord':
-        return 'Discord';
-      case 'email':
-      case 'credential':
-        return '邮箱密码';
+      case "google":
+        return "Google";
+      case "github":
+        return "GitHub";
+      case "discord":
+        return "Discord";
+      case "email":
+      case "credential":
+        return "邮箱密码";
       default:
         return providerId;
     }
@@ -138,9 +130,7 @@ export default async function AccountsPage({
           <Key className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">账户管理</h1>
         </div>
-        <p className="text-muted-foreground">
-          查看用户的第三方账户关联信息
-        </p>
+        <p className="text-muted-foreground">查看用户的第三方账户关联信息</p>
       </div>
 
       {/* 统计卡片 */}
@@ -155,7 +145,7 @@ export default async function AccountsPage({
             <p className="text-xs text-muted-foreground">所有关联账户</p>
           </CardContent>
         </Card>
-        
+
         {providerStats.slice(0, 3).map((stat: { providerId: string; count: number }) => (
           <Card key={stat.providerId}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -179,12 +169,7 @@ export default async function AccountsPage({
           <form method="GET" className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                name="search"
-                placeholder="搜索用户名、邮箱或提供商..."
-                defaultValue={search}
-                className="pl-10"
-              />
+              <Input name="search" placeholder="搜索用户名、邮箱或提供商..." defaultValue={search} className="pl-10" />
             </div>
             <select
               name="provider"
@@ -212,9 +197,7 @@ export default async function AccountsPage({
       <Card>
         <CardHeader>
           <CardTitle>账户列表</CardTitle>
-          <CardDescription>
-            {search ? `搜索 "${search}" 的结果` : "所有用户关联账户"}
-          </CardDescription>
+          <CardDescription>{search ? `搜索 "${search}" 的结果` : "所有用户关联账户"}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -235,9 +218,7 @@ export default async function AccountsPage({
                     <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Key className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          {search ? "未找到匹配的账户" : "暂无账户数据"}
-                        </p>
+                        <p className="text-muted-foreground">{search ? "未找到匹配的账户" : "暂无账户数据"}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -245,7 +226,7 @@ export default async function AccountsPage({
                   accounts.map((acc: any) => {
                     const accessTokenExpired = isTokenExpired(acc.accessTokenExpiresAt);
                     const refreshTokenExpired = isTokenExpired(acc.refreshTokenExpiresAt);
-                    
+
                     return (
                       <TableRow key={acc.id}>
                         <TableCell>
@@ -253,7 +234,9 @@ export default async function AccountsPage({
                             <Avatar className="w-8 h-8">
                               <AvatarImage src={acc.userImage || undefined} />
                               <AvatarFallback>
-                                {acc.userName?.charAt(0)?.toUpperCase() || acc.userEmail?.charAt(0).toUpperCase() || "U"}
+                                {acc.userName?.charAt(0)?.toUpperCase() ||
+                                  acc.userEmail?.charAt(0).toUpperCase() ||
+                                  "U"}
                               </AvatarFallback>
                             </Avatar>
                             <div>
@@ -265,9 +248,7 @@ export default async function AccountsPage({
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="text-lg">{getProviderIcon(acc.providerId)}</span>
-                            <Badge variant="outline">
-                              {formatProviderName(acc.providerId)}
-                            </Badge>
+                            <Badge variant="outline">{formatProviderName(acc.providerId)}</Badge>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -276,7 +257,7 @@ export default async function AccountsPage({
                         <TableCell>
                           <div className="space-y-1">
                             {acc.accessToken && (
-                              <Badge 
+                              <Badge
                                 variant={accessTokenExpired ? "destructive" : "default"}
                                 className={accessTokenExpired ? "" : "bg-green-500"}
                               >
@@ -284,16 +265,14 @@ export default async function AccountsPage({
                               </Badge>
                             )}
                             {acc.refreshToken && (
-                              <Badge 
+                              <Badge
                                 variant={refreshTokenExpired ? "destructive" : "secondary"}
                                 className={refreshTokenExpired ? "" : "bg-blue-500"}
                               >
                                 刷新令牌 {refreshTokenExpired ? "已过期" : "有效"}
                               </Badge>
                             )}
-                            {!acc.accessToken && !acc.refreshToken && (
-                              <Badge variant="outline">无令牌</Badge>
-                            )}
+                            {!acc.accessToken && !acc.refreshToken && <Badge variant="outline">无令牌</Badge>}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -311,7 +290,7 @@ export default async function AccountsPage({
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {acc.createdAt ? new Date(acc.createdAt).toLocaleString('zh-CN') : "未知"}
+                              {acc.createdAt ? new Date(acc.createdAt).toLocaleString("zh-CN") : "未知"}
                             </span>
                           </div>
                         </TableCell>
@@ -331,14 +310,18 @@ export default async function AccountsPage({
               </div>
               <div className="flex gap-2">
                 {page > 1 && (
-                  <Link href={`/admin/accounts?page=${page - 1}${search ? `&search=${search}` : ''}${provider !== 'all' ? `&provider=${provider}` : ''}`}>
+                  <Link
+                    href={`/admin/accounts?page=${page - 1}${search ? `&search=${search}` : ""}${provider !== "all" ? `&provider=${provider}` : ""}`}
+                  >
                     <Button variant="outline" size="sm">
                       上一页
                     </Button>
                   </Link>
                 )}
                 {page < totalPages && (
-                  <Link href={`/admin/accounts?page=${page + 1}${search ? `&search=${search}` : ''}${provider !== 'all' ? `&provider=${provider}` : ''}`}>
+                  <Link
+                    href={`/admin/accounts?page=${page + 1}${search ? `&search=${search}` : ""}${provider !== "all" ? `&provider=${provider}` : ""}`}
+                  >
                     <Button variant="outline" size="sm">
                       下一页
                     </Button>

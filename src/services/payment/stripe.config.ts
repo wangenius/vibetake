@@ -1,5 +1,5 @@
-import Stripe from "stripe";
 import dotenv from "dotenv";
+import Stripe from "stripe";
 
 dotenv.config();
 
@@ -22,28 +22,16 @@ export const STRIPE_CONFIG = {
   webhookEndpoint: `${baseUrl}/api/payment/webhooks/stripe`,
 } as const;
 
-export const PAYMENT_METHODS = [
-  "card",
-  "alipay",
-  "wechat_pay",
-  "ideal",
-  "sepa_debit",
-] as const;
+export const PAYMENT_METHODS = ["card", "alipay", "wechat_pay", "ideal", "sepa_debit"] as const;
 
 // 验证必需的环境变量
 export function validateStripeConfig() {
-  const requiredVars = [
-    "STRIPE_SECRET_KEY",
-    "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
-    "STRIPE_WEBHOOK_SECRET",
-  ];
+  const requiredVars = ["STRIPE_SECRET_KEY", "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET"];
 
   const missing = requiredVars.filter((varName) => !process.env[varName]);
 
   if (missing.length > 0) {
-    throw new Error(
-      `Missing required Stripe environment variables: ${missing.join(", ")}`
-    );
+    throw new Error(`Missing required Stripe environment variables: ${missing.join(", ")}`);
   }
 
   // 验证密钥格式

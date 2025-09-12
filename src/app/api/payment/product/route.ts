@@ -1,5 +1,5 @@
-import { stripe } from "@/services/payment/stripe.config";
 import { NextRequest, NextResponse } from "next/server";
+import { stripe } from "@/services/payment/stripe.config";
 
 // 获取所有活跃的产品和价格
 export async function POST(req: NextRequest) {
@@ -12,8 +12,6 @@ export async function POST(req: NextRequest) {
     const prices = await stripe.prices.list({
       product: productId,
     });
-
-  
 
     return NextResponse.json({
       success: true,
@@ -29,7 +27,7 @@ export async function POST(req: NextRequest) {
         success: false,
         error: "Failed to fetch products",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

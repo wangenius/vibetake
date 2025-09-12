@@ -1,13 +1,13 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { desc, gt, like, sql } from "drizzle-orm";
+import { AlertTriangle, ArrowLeft, Calendar, CheckCircle, Clock, Mail, Search, XCircle } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Clock, Search, ArrowLeft, Calendar, Mail, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
-import Link from "next/link";
 import { db } from "@/services/database/client";
 import { verification } from "@/services/database/schema";
-import { desc, like, gt, sql } from "drizzle-orm";
 
 interface SearchParams {
   search?: string;
@@ -15,11 +15,7 @@ interface SearchParams {
   status?: string;
 }
 
-export default async function VerificationsPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function VerificationsPage({ searchParams }: { searchParams: SearchParams }) {
   const search = searchParams.search || "";
   const page = Number(searchParams.page) || 1;
   const status = searchParams.status || "all";
@@ -28,11 +24,9 @@ export default async function VerificationsPage({
 
   // 构建查询条件
   let whereConditions = [];
-  
+
   if (search) {
-    whereConditions.push(
-      like(verification.identifier, `%${search}%`)
-    );
+    whereConditions.push(like(verification.identifier, `%${search}%`));
   }
 
   if (status === "active") {
@@ -45,7 +39,7 @@ export default async function VerificationsPage({
   const verifications = await db
     .select()
     .from(verification)
-    .where(whereConditions.length > 0 ? sql`${whereConditions.join(' AND ')}` : undefined)
+    .where(whereConditions.length > 0 ? sql`${whereConditions.join(" AND ")}` : undefined)
     .orderBy(desc(verification.createdAt))
     .limit(limit)
     .offset(offset);
@@ -54,7 +48,10 @@ export default async function VerificationsPage({
   const [totalVerifications, activeVerifications, expiredVerifications] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(verification),
     db.select({ count: sql<number>`count(*)` }).from(verification).where(gt(verification.expiresAt, new Date())),
-    db.select({ count: sql<number>`count(*)` }).from(verification).where(sql`${verification.expiresAt} <= ${new Date()}`),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(verification)
+      .where(sql`${verification.expiresAt} <= ${new Date()}`),
   ]);
 
   const totalCount = totalVerifications[0]?.count || 0;
@@ -76,7 +73,7 @@ export default async function VerificationsPage({
 
   // 获取验证类型图标
   const getVerificationIcon = (identifier: string) => {
-    if (identifier.includes('@')) {
+    if (identifier.includes("@")) {
       return <Mail className="w-4 h-4" />;
     }
     return <Clock className="w-4 h-4" />;
@@ -84,16 +81,16 @@ export default async function VerificationsPage({
 
   // 格式化验证类型
   const getVerificationType = (identifier: string) => {
-    if (identifier.includes('@')) {
-      return '邮箱验证';
+    if (identifier.includes("@")) {
+      return "邮箱验证";
     }
-    if (identifier.startsWith('phone:')) {
-      return '手机验证';
+    if (identifier.startsWith("phone:")) {
+      return "手机验证";
     }
-    if (identifier.startsWith('reset:')) {
-      return '密码重置';
+    if (identifier.startsWith("reset:")) {
+      return "密码重置";
     }
-    return '其他验证';
+    return "其他验证";
   };
 
   return (
@@ -110,9 +107,7 @@ export default async function VerificationsPage({
           <Clock className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">验证管理</h1>
         </div>
-        <p className="text-muted-foreground">
-          查看和管理用户验证请求（邮箱验证、密码重置等）
-        </p>
+        <p className="text-muted-foreground">查看和管理用户验证请求（邮箱验证、密码重置等）</p>
       </div>
 
       {/* 统计卡片 */}
@@ -127,7 +122,7 @@ export default async function VerificationsPage({
             <p className="text-xs text-muted-foreground">所有验证记录</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">有效验证</CardTitle>
@@ -138,7 +133,7 @@ export default async function VerificationsPage({
             <p className="text-xs text-muted-foreground">未过期的验证</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">过期验证</CardTitle>
@@ -160,12 +155,7 @@ export default async function VerificationsPage({
           <form method="GET" className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                name="search"
-                placeholder="搜索邮箱或标识符..."
-                defaultValue={search}
-                className="pl-10"
-              />
+              <Input name="search" placeholder="搜索邮箱或标识符..." defaultValue={search} className="pl-10" />
             </div>
             <select
               name="status"
@@ -190,9 +180,7 @@ export default async function VerificationsPage({
       <Card>
         <CardHeader>
           <CardTitle>验证列表</CardTitle>
-          <CardDescription>
-            {search ? `搜索 "${search}" 的结果` : "所有验证记录"}
-          </CardDescription>
+          <CardDescription>{search ? `搜索 "${search}" 的结果` : "所有验证记录"}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -213,9 +201,7 @@ export default async function VerificationsPage({
                     <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Clock className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          {search ? "未找到匹配的验证" : "暂无验证数据"}
-                        </p>
+                        <p className="text-muted-foreground">{search ? "未找到匹配的验证" : "暂无验证数据"}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -223,31 +209,23 @@ export default async function VerificationsPage({
                   verifications.map((v: any) => {
                     const expired = isVerificationExpired(v.expiresAt);
                     const expiringSoon = isVerificationExpiringSoon(v.expiresAt);
-                    
+
                     return (
                       <TableRow key={v.id}>
                         <TableCell>
                           <div className="flex items-center gap-2">
                             {getVerificationIcon(v.identifier)}
-                            <Badge variant="outline">
-                              {getVerificationType(v.identifier)}
-                            </Badge>
+                            <Badge variant="outline">{getVerificationType(v.identifier)}</Badge>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="font-mono text-sm">
-                            {v.identifier.length > 30 
-                              ? `${v.identifier.substring(0, 30)}...` 
-                              : v.identifier
-                            }
+                            {v.identifier.length > 30 ? `${v.identifier.substring(0, 30)}...` : v.identifier}
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="font-mono text-sm bg-muted px-2 py-1 rounded inline-block">
-                            {v.value.length > 10 
-                              ? `${v.value.substring(0, 10)}...` 
-                              : v.value
-                            }
+                            {v.value.length > 10 ? `${v.value.substring(0, 10)}...` : v.value}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -278,19 +256,23 @@ export default async function VerificationsPage({
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {v.createdAt ? new Date(v.createdAt).toLocaleString('zh-CN') : "未知"}
+                              {v.createdAt ? new Date(v.createdAt).toLocaleString("zh-CN") : "未知"}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Clock className={`w-4 h-4 ${
-                              expired ? 'text-red-500' : expiringSoon ? 'text-yellow-500' : 'text-green-500'
-                            }`} />
-                            <span className={`text-sm ${
-                              expired ? 'text-red-600' : expiringSoon ? 'text-yellow-600' : 'text-green-600'
-                            }`}>
-                              {new Date(v.expiresAt).toLocaleString('zh-CN')}
+                            <Clock
+                              className={`w-4 h-4 ${
+                                expired ? "text-red-500" : expiringSoon ? "text-yellow-500" : "text-green-500"
+                              }`}
+                            />
+                            <span
+                              className={`text-sm ${
+                                expired ? "text-red-600" : expiringSoon ? "text-yellow-600" : "text-green-600"
+                              }`}
+                            >
+                              {new Date(v.expiresAt).toLocaleString("zh-CN")}
                             </span>
                           </div>
                         </TableCell>
@@ -310,14 +292,18 @@ export default async function VerificationsPage({
               </div>
               <div className="flex gap-2">
                 {page > 1 && (
-                  <Link href={`/admin/verifications?page=${page - 1}${search ? `&search=${search}` : ''}${status !== 'all' ? `&status=${status}` : ''}`}>
+                  <Link
+                    href={`/admin/verifications?page=${page - 1}${search ? `&search=${search}` : ""}${status !== "all" ? `&status=${status}` : ""}`}
+                  >
                     <Button variant="outline" size="sm">
                       上一页
                     </Button>
                   </Link>
                 )}
                 {page < totalPages && (
-                  <Link href={`/admin/verifications?page=${page + 1}${search ? `&search=${search}` : ''}${status !== 'all' ? `&status=${status}` : ''}`}>
+                  <Link
+                    href={`/admin/verifications?page=${page + 1}${search ? `&search=${search}` : ""}${status !== "all" ? `&status=${status}` : ""}`}
+                  >
                     <Button variant="outline" size="sm">
                       下一页
                     </Button>

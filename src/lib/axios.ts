@@ -1,8 +1,8 @@
 import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+  type InternalAxiosRequestConfig,
 } from "axios";
 
 // 创建axios实例
@@ -29,7 +29,7 @@ instance.interceptors.request.use(
   (error) => {
     console.error("Request error:", error);
     return Promise.reject(error);
-  }
+  },
 );
 
 // 响应拦截器
@@ -60,10 +60,7 @@ instance.interceptors.response.use(
           console.error("Internal server error");
           break;
         default:
-          console.error(
-            `HTTP Error ${status}:`,
-            data?.message || error.message
-          );
+          console.error(`HTTP Error ${status}:`, data?.message || error.message);
       }
     } else if (error.request) {
       console.error("Network error:", error.message);
@@ -72,23 +69,18 @@ instance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // 导出配置好的axios实例
 export default instance;
 
 // 导出常用的HTTP方法
-export const get = (url: string, config?: AxiosRequestConfig) =>
-  instance.get(url, config);
-export const post = (url: string, data?: any, config?: AxiosRequestConfig) =>
-  instance.post(url, data, config);
-export const put = (url: string, data?: any, config?: AxiosRequestConfig) =>
-  instance.put(url, data, config);
-export const patch = (url: string, data?: any, config?: AxiosRequestConfig) =>
-  instance.patch(url, data, config);
-export const del = (url: string, config?: AxiosRequestConfig) =>
-  instance.delete(url, config);
+export const get = (url: string, config?: AxiosRequestConfig) => instance.get(url, config);
+export const post = (url: string, data?: any, config?: AxiosRequestConfig) => instance.post(url, data, config);
+export const put = (url: string, data?: any, config?: AxiosRequestConfig) => instance.put(url, data, config);
+export const patch = (url: string, data?: any, config?: AxiosRequestConfig) => instance.patch(url, data, config);
+export const del = (url: string, config?: AxiosRequestConfig) => instance.delete(url, config);
 
 // 类型定义
 export interface ApiResponse<T = any> {
@@ -101,45 +93,27 @@ export interface ApiResponse<T = any> {
 
 // 封装常用的API调用方法
 export const APIServer = {
-  get: async <T = any>(
-    url: string,
-    config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> => {
+  get: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     const response = await instance.get(url, config);
     return response.data;
   },
 
-  post: async <T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> => {
+  post: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     const response = await instance.post(url, data, config);
     return response.data;
   },
 
-  put: async <T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> => {
+  put: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     const response = await instance.put(url, data, config);
     return response.data;
   },
 
-  patch: async <T = any>(
-    url: string,
-    data?: any,
-    config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> => {
+  patch: async <T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     const response = await instance.patch(url, data, config);
     return response.data;
   },
 
-  delete: async <T = any>(
-    url: string,
-    config?: AxiosRequestConfig
-  ): Promise<ApiResponse<T>> => {
+  delete: async <T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> => {
     const response = await instance.delete(url, config);
     return response.data;
   },

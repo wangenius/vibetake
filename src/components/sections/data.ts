@@ -10,12 +10,7 @@ export const PRICE_FEATURES: Record<
 > = {
   free: {
     id: "free",
-    features: [
-      "MIT License",
-      "Community Support",
-      "Basic Documentation",
-      "GitHub Repository Access",
-    ],
+    features: ["MIT License", "Community Support", "Basic Documentation", "GitHub Repository Access"],
   },
   community: {
     id: "price_1S6SQ12OPw3DTd5UVAvYk5wL",

@@ -1,15 +1,14 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { desc, eq, gt, like, or, sql } from "drizzle-orm";
+import { ArrowLeft, Calendar, Clock, MapPin, Monitor, Search, Shield, User } from "lucide-react";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Shield, Search, ArrowLeft, Calendar, Clock, Monitor, MapPin, User } from "lucide-react";
-import Link from "next/link";
 import { db } from "@/services/database/client";
 import { session, user } from "@/services/database/schema";
-import { desc, like, or, eq, gt } from "drizzle-orm";
-import { sql } from "drizzle-orm";
 
 interface SearchParams {
   search?: string;
@@ -17,11 +16,7 @@ interface SearchParams {
   status?: string;
 }
 
-export default async function SessionsPage({
-  searchParams,
-}: {
-  searchParams: SearchParams;
-}) {
+export default async function SessionsPage({ searchParams }: { searchParams: SearchParams }) {
   const search = searchParams.search || "";
   const page = Number(searchParams.page) || 1;
   const status = searchParams.status || "all";
@@ -30,14 +25,10 @@ export default async function SessionsPage({
 
   // 构建查询条件
   let whereConditions = [];
-  
+
   if (search) {
     whereConditions.push(
-      or(
-        like(user.name, `%${search}%`),
-        like(user.email, `%${search}%`),
-        like(session.ipAddress, `%${search}%`)
-      )
+      or(like(user.name, `%${search}%`), like(user.email, `%${search}%`), like(session.ipAddress, `%${search}%`)),
     );
   }
 
@@ -64,7 +55,7 @@ export default async function SessionsPage({
     })
     .from(session)
     .leftJoin(user, eq(session.userId, user.id))
-    .where(whereConditions.length > 0 ? sql`${whereConditions.join(' AND ')}` : undefined)
+    .where(whereConditions.length > 0 ? sql`${whereConditions.join(" AND ")}` : undefined)
     .orderBy(desc(session.createdAt))
     .limit(limit)
     .offset(offset);
@@ -110,9 +101,7 @@ export default async function SessionsPage({
           <Shield className="w-8 h-8 text-primary" />
           <h1 className="text-3xl font-bold">会话管理</h1>
         </div>
-        <p className="text-muted-foreground">
-          查看和管理用户会话信息
-        </p>
+        <p className="text-muted-foreground">查看和管理用户会话信息</p>
       </div>
 
       {/* 统计卡片 */}
@@ -127,7 +116,7 @@ export default async function SessionsPage({
             <p className="text-xs text-muted-foreground">所有会话记录</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">活跃会话</CardTitle>
@@ -138,7 +127,7 @@ export default async function SessionsPage({
             <p className="text-xs text-muted-foreground">未过期的会话</p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">过期会话</CardTitle>
@@ -160,12 +149,7 @@ export default async function SessionsPage({
           <form method="GET" className="flex gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                name="search"
-                placeholder="搜索用户名、邮箱或IP地址..."
-                defaultValue={search}
-                className="pl-10"
-              />
+              <Input name="search" placeholder="搜索用户名、邮箱或IP地址..." defaultValue={search} className="pl-10" />
             </div>
             <select
               name="status"
@@ -190,9 +174,7 @@ export default async function SessionsPage({
       <Card>
         <CardHeader>
           <CardTitle>会话列表</CardTitle>
-          <CardDescription>
-            {search ? `搜索 "${search}" 的结果` : "所有用户会话"}
-          </CardDescription>
+          <CardDescription>{search ? `搜索 "${search}" 的结果` : "所有用户会话"}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
@@ -213,9 +195,7 @@ export default async function SessionsPage({
                     <TableCell colSpan={6} className="text-center py-8">
                       <div className="flex flex-col items-center gap-2">
                         <Shield className="w-8 h-8 text-muted-foreground" />
-                        <p className="text-muted-foreground">
-                          {search ? "未找到匹配的会话" : "暂无会话数据"}
-                        </p>
+                        <p className="text-muted-foreground">{search ? "未找到匹配的会话" : "暂无会话数据"}</p>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -239,7 +219,10 @@ export default async function SessionsPage({
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={expired ? "destructive" : "default"} className={expired ? "" : "bg-green-500"}>
+                          <Badge
+                            variant={expired ? "destructive" : "default"}
+                            className={expired ? "" : "bg-green-500"}
+                          >
                             {expired ? "已过期" : "活跃"}
                           </Badge>
                         </TableCell>
@@ -259,15 +242,15 @@ export default async function SessionsPage({
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {s.createdAt ? new Date(s.createdAt).toLocaleString('zh-CN') : "未知"}
+                              {s.createdAt ? new Date(s.createdAt).toLocaleString("zh-CN") : "未知"}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Clock className={`w-4 h-4 ${expired ? 'text-red-500' : 'text-green-500'}`} />
-                            <span className={`text-sm ${expired ? 'text-red-600' : 'text-green-600'}`}>
-                              {new Date(s.expiresAt).toLocaleString('zh-CN')}
+                            <Clock className={`w-4 h-4 ${expired ? "text-red-500" : "text-green-500"}`} />
+                            <span className={`text-sm ${expired ? "text-red-600" : "text-green-600"}`}>
+                              {new Date(s.expiresAt).toLocaleString("zh-CN")}
                             </span>
                           </div>
                         </TableCell>
@@ -287,14 +270,18 @@ export default async function SessionsPage({
               </div>
               <div className="flex gap-2">
                 {page > 1 && (
-                  <Link href={`/admin/sessions?page=${page - 1}${search ? `&search=${search}` : ''}${status !== 'all' ? `&status=${status}` : ''}`}>
+                  <Link
+                    href={`/admin/sessions?page=${page - 1}${search ? `&search=${search}` : ""}${status !== "all" ? `&status=${status}` : ""}`}
+                  >
                     <Button variant="outline" size="sm">
                       上一页
                     </Button>
                   </Link>
                 )}
                 {page < totalPages && (
-                  <Link href={`/admin/sessions?page=${page + 1}${search ? `&search=${search}` : ''}${status !== 'all' ? `&status=${status}` : ''}`}>
+                  <Link
+                    href={`/admin/sessions?page=${page + 1}${search ? `&search=${search}` : ""}${status !== "all" ? `&status=${status}` : ""}`}
+                  >
                     <Button variant="outline" size="sm">
                       下一页
                     </Button>

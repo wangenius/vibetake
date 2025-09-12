@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
-import { APIServer } from "@/lib/axios";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import Stripe from "stripe";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { APIServer } from "@/lib/axios";
 
 export type PaymentResult = {
   success: boolean;
@@ -67,9 +67,7 @@ export function PaymentSuccess() {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col items-center justify-center p-8">
             <Loader2 className="w-8 h-8 animate-spin mb-4" />
-            <p className="text-center text-muted-foreground">
-              正在验证支付结果...
-            </p>
+            <p className="text-center text-muted-foreground">正在验证支付结果...</p>
           </CardContent>
         </Card>
       </div>
@@ -83,9 +81,7 @@ export function PaymentSuccess() {
           <CardContent className="flex flex-col items-center justify-center p-8">
             <XCircle className="w-12 h-12 text-red-500 mb-4" />
             <h2 className="text-xl font-semibold mb-2">支付验证失败</h2>
-            <p className="text-center text-muted-foreground mb-4">
-              无法获取支付结果，请联系客服。
-            </p>
+            <p className="text-center text-muted-foreground mb-4">无法获取支付结果，请联系客服。</p>
             <Button asChild>
               <Link href="/">返回首页</Link>
             </Button>
@@ -106,13 +102,9 @@ export function PaymentSuccess() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              {result.error || "支付过程中发生错误，请重试。"}
-            </p>
+            <p className="text-muted-foreground">{result.error || "支付过程中发生错误，请重试。"}</p>
             {result.details && (
-              <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-                {result.details}
-              </p>
+              <p className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">{result.details}</p>
             )}
             <div className="flex gap-2">
               <Button variant="outline" asChild className="flex-1">
@@ -144,8 +136,7 @@ export function PaymentSuccess() {
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>支付ID: {result.paymentIntent.id}</p>
                 <p>
-                  金额: {(result.paymentIntent.amount / 100).toFixed(2)}{" "}
-                  {result.paymentIntent.currency.toUpperCase()}
+                  金额: {(result.paymentIntent.amount / 100).toFixed(2)} {result.paymentIntent.currency.toUpperCase()}
                 </p>
                 <p>状态: {result.paymentIntent.status}</p>
               </div>
@@ -158,20 +149,13 @@ export function PaymentSuccess() {
               <div className="text-sm text-muted-foreground space-y-1">
                 <p>订阅ID: {result.subscription.id}</p>
                 <p>状态: {result.subscription.status}</p>
-                <p>
-                  下次续费:{" "}
-                  {new Date(
-                    result.subscription.currentPeriodEnd * 1000
-                  ).toLocaleDateString("zh-CN")}
-                </p>
+                <p>下次续费: {new Date(result.subscription.currentPeriodEnd * 1000).toLocaleDateString("zh-CN")}</p>
               </div>
             </div>
           )}
 
           <div className="pt-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              感谢您的支付！您的订单已成功处理。
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">感谢您的支付！您的订单已成功处理。</p>
             <div className="flex gap-2">
               <Button variant="outline" asChild className="flex-1">
                 <Link href="/dashboard">查看订阅</Link>

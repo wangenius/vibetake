@@ -1,10 +1,5 @@
 import { FC } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface FAQItem {
   question: string;
@@ -50,17 +45,11 @@ export const FAQ: FC<{ items?: FAQItem[] }> = (props) => {
           </h2>
           <Accordion type="single" collapsible className="space-y-4">
             {items.map((faq, index) => (
-              <AccordionItem
-                key={index}
-                value={`item-${index}`}
-                className="rounded-lg shadow-sm border"
-              >
+              <AccordionItem key={index} value={`item-${index}`} className="rounded-lg shadow-sm border">
                 <AccordionTrigger className="px-4 py-4">
                   <span className="text-left font-medium">{faq.question}</span>
                 </AccordionTrigger>
-                <AccordionContent className="px-4 pb-4 pt-2 text-gray-600">
-                  {faq.answer}
-                </AccordionContent>
+                <AccordionContent className="px-4 pb-4 pt-2 text-gray-600">{faq.answer}</AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

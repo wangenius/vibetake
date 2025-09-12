@@ -1,11 +1,12 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+import Image from "next/image";
 
 export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       title: (
         <>
-          <img src={"/icon-black.svg"} className="w-8 h-8" />
+          <Image src={"/icon-black.svg"} width={24} height={24} alt="icon" className="w-8 h-8" />
           <span className="font-bold">vibetake docs</span>
         </>
       ),
