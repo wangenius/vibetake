@@ -32,10 +32,10 @@ export const HeroSection: FC = () => {
             <Button
               variant="outline"
               size="lg"
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto overflow-hidden"
               onClick={copyToClipboard}
             >
-              <code className="p-1 rounded">
+              <code className="p-1 rounded-full">
                 {copied
                   ? "Copied!"
                   : "git clone https://github.com/wangenius/next-template.git"}
