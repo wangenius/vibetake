@@ -60,71 +60,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未授权访问" }, { status: 401 });
     }
 
-    const { paymentIntentId, status } = await request.json();
+    const { sessionId } = await request.json();
 
-    if (!paymentIntentId) {
+    if (!sessionId) {
       return NextResponse.json(
         {
           success: false,
-          error: "缺少支付意图ID",
+          error: "缺少会话ID",
           details: "请确保从支付页面正确跳转，并包含必要的支付参数",
         },
         { status: 400 },
       );
     }
-
-    if (!status) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "缺少支付状态参数",
-          details: "支付重定向缺少状态信息，请重新发起支付",
-        },
-        { status: 400 },
-      );
-    }
-
-    // 从 Stripe 获取支付意图详情
-    let paymentIntent;
+    // 根据 Checkout Session 验证支付
+    let checkoutSession;
     try {
-      paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      checkoutSession = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ["payment_intent", "subscription"],
+      });
     } catch (error) {
-      console.error("获取支付意图失败:", error);
+      console.error("获取 Checkout Session 失败:", error);
       return NextResponse.json(
         {
           success: false,
-          error: "无效的支付意图ID",
-          details: "无法找到对应的支付记录，请联系客服或重新发起支付",
+          error: "无效的会话ID",
+          details: "无法找到对应的支付会话，请联系客服或重新发起支付",
         },
         { status: 400 },
       );
     }
 
-    if (paymentIntent.status === "succeeded") {
-      // 支付成功，检查是否有关联的订阅
-      let subscription = null;
+    const paymentIntent = checkoutSession.payment_intent as any;
 
-      if (paymentIntent.metadata?.subscriptionId) {
-        try {
-          subscription = await stripe.subscriptions.retrieve(paymentIntent.metadata.subscriptionId);
-        } catch (error) {
-          console.error("获取订阅信息失败:", error);
-        }
-      }
+    if (checkoutSession.payment_status === "paid" || paymentIntent?.status === "succeeded") {
+      // 支付成功，检查是否有关联的订阅
+      const subscription: any = checkoutSession.subscription || null;
 
       return NextResponse.json({
         success: true,
-        paymentIntent: {
-          id: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency,
-          status: paymentIntent.status,
-        },
+        paymentIntent: paymentIntent
+          ? {
+              id: paymentIntent.id,
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+              status: paymentIntent.status,
+            }
+          : undefined,
         subscription: subscription
           ? {
               id: subscription.id,
               status: subscription.status,
-              currentPeriodEnd: subscription.ended_at,
+              currentPeriodEnd: subscription.current_period_end,
             }
           : undefined,
       });
@@ -133,7 +119,8 @@ export async function POST(request: NextRequest) {
       let errorMessage = "支付未完成";
       let errorDetails = "";
 
-      switch (paymentIntent.status) {
+      const piStatus = paymentIntent?.status;
+      switch (piStatus) {
         case "requires_payment_method":
           errorMessage = "支付方式无效";
           errorDetails = "请检查您的支付方式是否有效，或尝试使用其他支付方式";
@@ -159,7 +146,7 @@ export async function POST(request: NextRequest) {
           errorDetails = "支付已被取消，如需继续请重新发起支付";
           break;
         default:
-          errorMessage = `支付状态异常: ${paymentIntent.status}`;
+          errorMessage = `支付状态异常: ${piStatus ?? checkoutSession.payment_status}`;
           errorDetails = "支付状态未知，请联系客服或重新发起支付";
       }
 
@@ -167,12 +154,14 @@ export async function POST(request: NextRequest) {
         success: false,
         error: errorMessage,
         details: errorDetails,
-        paymentIntent: {
-          id: paymentIntent.id,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency,
-          status: paymentIntent.status,
-        },
+        paymentIntent: paymentIntent
+          ? {
+              id: paymentIntent.id,
+              amount: paymentIntent.amount,
+              currency: paymentIntent.currency,
+              status: paymentIntent.status,
+            }
+          : undefined,
       });
     }
   } catch (error) {

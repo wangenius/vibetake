@@ -32,23 +32,20 @@ export function PaymentSuccess() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const paymentIntentId = searchParams.get("payment_intent");
-    const redirectStatus = searchParams.get("redirect_status");
+    // Stripe Checkout success URL now passes `session_id`
+    const sessionId = searchParams.get("session_id");
 
-    if (paymentIntentId && redirectStatus) {
-      verifyPayment(paymentIntentId, redirectStatus);
+    if (sessionId) {
+      verifyPayment(sessionId);
     } else {
       setResult(null);
       setLoading(false);
     }
   }, [searchParams]);
 
-  const verifyPayment = async (paymentIntentId: string, status: string) => {
+  const verifyPayment = async (sessionId: string) => {
     try {
-      const { data } = await APIServer.post("/payment/status", {
-        paymentIntentId,
-        status,
-      });
+      const data = await APIServer.post("/payment/status", { sessionId });
 
       setResult(data);
     } catch (error) {
