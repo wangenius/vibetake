@@ -2,7 +2,7 @@
 import { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-const BASH_COMMAND = "git clone https://github.com/wangenius/next-template.git";
+const BASH_COMMAND = "git clone https://github.com/wangenius/vibetake.git";
 
 export const HeroSection: FC = () => {
   const [copied, setCopied] = useState(false);

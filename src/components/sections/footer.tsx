@@ -12,7 +12,7 @@ export function Footer() {
             <ul className="mb-4">
               <li className="mt-2">
                 <a
-                  href="https://github.com/wangenius/next-template"
+                  href="https://github.com/wangenius/vibetake"
                   className="hover:underline text-gray-600 hover:text-gray-800"
                 >
                   GitHub Repository

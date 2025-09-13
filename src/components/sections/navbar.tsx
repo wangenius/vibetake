@@ -69,7 +69,7 @@ export function Navbar() {
                 <span className="sr-only">Twitter</span>
               </Button>
             </Link>
-            <Link href="https://github.com/wangenius/next-template" target="_blank" rel="noopener noreferrer">
+            <Link href="https://github.com/wangenius/vibetake" target="_blank" rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <IconBrandGithub className="h-4 w-4" />
                 <span className="sr-only">GitHub</span>
@@ -158,7 +158,7 @@ export function Navbar() {
                           <span className="sr-only">Twitter</span>
                         </Button>
                       </Link>
-                      <Link href="https://github.com/wangenius/next-template" target="_blank" rel="noopener noreferrer">
+                      <Link href="https://github.com/wangenius/vibetake" target="_blank" rel="noopener noreferrer">
                         <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                           <IconBrandGithub className="h-4 w-4" />
                           <span className="sr-only">GitHub</span>
