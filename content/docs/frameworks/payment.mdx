@@ -5,11 +5,11 @@ description: 使用 Stripe 实现支付功能
 
 # Stripe 支付集成指南
 
-Vibe Template 集成了 [Stripe](https://stripe.com) 支付系统，为你的应用提供完整的支付解决方案。本文档将详细介绍如何配置和使用 Stripe 支付功能。
+vibetake 集成了 [Stripe](https://stripe.com) 支付系统，为你的应用提供完整的支付解决方案。本文档将详细介绍如何配置和使用 Stripe 支付功能。
 
 ## 概述
 
-Stripe 是全球领先的在线支付处理平台，提供安全、可靠的支付基础设施。Vibe Template 的 Stripe 集成支持多种支付场景和业务模式。
+Stripe 是全球领先的在线支付处理平台，提供安全、可靠的支付基础设施。vibetake 的 Stripe 集成支持多种支付场景和业务模式。
 
 ### 核心特性
 
@@ -1543,7 +1543,7 @@ export async function createTestProducts() {
 // 启用详细日志
 if (process.env.NODE_ENV === 'development') {
   stripe.setAppInfo({
-    name: 'Vibe Template',
+    name: 'vibetake',
     version: '1.0.0',
     url: 'https://your-app.com',
   });
@@ -1557,4 +1557,4 @@ stripe._request = function(method, path, data, auth, options, callback) {
 };
 ```
 
-通过本文档，你应该能够在 Vibe Template 中完整地集成和使用 Stripe 支付系统。记住始终在测试环境中验证所有功能，并确保遵循 Stripe 的最佳实践和安全指南。如需更多信息，请参考 [Stripe 官方文档](https://stripe.com/docs)。
+通过本文档，你应该能够在 vibetake 中完整地集成和使用 Stripe 支付系统。记住始终在测试环境中验证所有功能，并确保遵循 Stripe 的最佳实践和安全指南。如需更多信息，请参考 [Stripe 官方文档](https://stripe.com/docs)。
