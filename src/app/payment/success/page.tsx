@@ -1,12 +1,34 @@
 "use client";
-
 import { CheckCircle, Loader2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { APIServer } from "@/lib/axios";
+
+function PaymentSuccessPageInner() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="w-full max-w-md">
+            <CardContent className="flex flex-col items-center justify-center p-8">
+              <Loader2 className="w-8 h-8 animate-spin mb-4" />
+              <p className="text-center text-muted-foreground">正在验证支付结果...</p>
+            </CardContent>
+          </Card>
+        </div>
+      }
+    >
+      <PaymentSuccessClient />
+    </Suspense>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return <PaymentSuccessPageInner />;
+}
 
 export type PaymentResult = {
   success: boolean;
@@ -24,7 +46,7 @@ export type PaymentResult = {
     currentPeriodEnd: number;
   };
 };
-export default function PaymentSuccessPage() {
+function PaymentSuccessClient() {
   const searchParams = useSearchParams();
   const [result, setResult] = useState<PaymentResult | null>(null);
   const [loading, setLoading] = useState(true);
