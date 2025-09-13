@@ -2,7 +2,7 @@
 
 import { FAQ } from "@/components/sections/faq";
 import { Footer } from "@/components/sections/footer";
-import { HeroSection } from "@/components/sections/hero-section";
+import { HeroSection } from "@/components/sections/HeroSection";
 import { Navbar } from "@/components/sections/navbar";
 import { PricingSection } from "@/components/sections/pricing";
 import { SocialProof } from "@/components/sections/testimonials";

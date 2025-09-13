@@ -1,4 +1,4 @@
-# Vibe Template
+# Vibetake
 
 一个现代化的全栈模版，基于 Next.js 15、TypeScript、Tailwind v4 和 shadcn/ui，内置认证、数据库、支付、文档站等常用能力，开箱即用、可按需删改。
 
@@ -28,7 +28,7 @@ src/
         webhooks/stripe/route.ts
       search/route.ts
     docs/[[...slug]]/page.tsx         # 文档详情页
-    docs/layout.tsx                   
+    docs/layout.tsx
     payment/*                         # 支付成功/取消等页面
     login/page.tsx                    # 登录页
     register/page.tsx                 # 注册页
@@ -48,44 +48,31 @@ public/                    # 静态资源
 
 ## 快速开始
 
-1) 获取代码
+1. 获取代码
 
 ```bash
-git clone https://github.com/wangenius/vibetake-template.git
-cd vibetake-template
+git clone https://github.com/wangenius/vibetake.git
+cd vibetake
 ```
 
 或使用 CLI：
 
 ```bash
-npm i -g vibetake
-vibe template
+npm i -g vibecape
+vibe create template
 ```
 
-2) 安装依赖
+2. 执行配置脚本
 
 ```bash
-pnpm i # 或 npm i / yarn
+bash ./scripts/pre.sh
 ```
-
-3) 配置环境变量
-
-复制 `.env.example` 为 `.env.local` 并填写：
-
+或者
 ```bash
-# Stripe
-STRIPE_SECRET_KEY=
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
-STRIPE_WEBHOOK_SECRET=
-
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-
-# 数据库（根据 drizzle.config.ts / services/database）
-# 例如 libsql / postgres 等所需变量
+npm run prepare
 ```
 
-4) 初始化数据库（如需）
+4. 初始化数据库（如需）
 
 ```bash
 pnpm generate   # 生成迁移
@@ -93,10 +80,10 @@ pnpm migrate    # 执行迁移
 # 或 pnpm db:push
 ```
 
-5) 本地开发
+5. 本地开发
 
 ```bash
-pnpm dev
+npm run dev
 # 访问 http://localhost:3000
 ```
 
@@ -108,33 +95,6 @@ pnpm dev
 - `lint`: Biome 检查
 - `format`: Biome 格式化
 - `generate / migrate / db:push`: Drizzle 迁移相关
-
-## 认证（better-auth）
-
-- 路由：`src/app/api/auth/[...all]/route.ts`
-- 页面：`src/app/login/page.tsx`、`src/app/register/page.tsx`
-- 客户端封装：`src/services/userauth/auth-client.ts`
-
-根据需要在前端调用对应的认证 API，并在受保护页面做登录校验。
-
-## 数据库（Drizzle + LibSQL）
-
-- 配置：`drizzle.config.ts`
-- 客户端与 Schema：`src/services/database/*`
-
-按需调整连接、表结构与迁移流程。
-
-## 支付（Stripe）
-
-- API 路由：
-  - `src/app/api/payment/create/route.ts`
-  - `src/app/api/payment/status/route.ts`
-  - `src/app/api/payment/product/route.ts`
-  - `src/app/api/payment/webhooks/stripe/route.ts`
-- 页面：`src/app/payment/*`，组件：`src/components/payment/*`
-- 详细说明：见 `src/services/payment/README.md`
-
-本模版已包含创建 Checkout、查询状态、Webhook 验证与订阅等基础能力。
 
 ## 文档站（Fumadocs）
 
